@@ -1137,6 +1137,8 @@ function renderStatusEffects() {
 
 function _updateUIImpl() {
     if(state.ff) return; // 補跑期間不刷新畫面
+    // 📄 頁面標題：載入角色後顯示「角色名 — 放置天堂」(未取名→純標題)，方便多開分頁辨識；獨立頁(?view=)交給 wiki/dex 自訂標題、不覆蓋。回選單由 backToMenu 重設。
+    if (location.search.indexOf('view=') === -1) { var _pt = (player && player.cls && player.name) ? (player.name + ' — 放置天堂') : '放置天堂'; if (document.title !== _pt) document.title = _pt; }
     updatePrideFloorIndicator();   // 🗼 攀登中右上角顯示目前樓層（背景補跑後回到前景時同步）
     try { renderPandoraBanner(); } catch (e) {}   // 🔧 潘朵拉黑市稀有商品公告橫幅
     try { renderSyslogPandora(); } catch (e) {}   // 🔧 系統日誌標題列右側：黑市拍賣中商品

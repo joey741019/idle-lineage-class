@@ -542,6 +542,7 @@ function backToMenu() {
     document.getElementById('main-menu').classList.remove('hidden');
     document.getElementById('creation-panel').classList.add('hidden');
     if(anySaveExists()) document.getElementById('btn-load').classList.remove('hidden');
+    document.title = '放置天堂';   // 📄 回主選單→標題還原(離開角色;見 _updateUIImpl 的角色名標題)
 }
 
 // 🎬 創角立繪逐幀動畫：每個職業一段動畫（幀圖在 assets/start/<key>/<幀號>.png，幀號是全域連號、各職業一段區間）。
