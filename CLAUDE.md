@@ -4,7 +4,7 @@
 
 - 網頁放置遊戲。遊戲本體由原作者(巴哈姆特 秋玥)製作,原版網址:**https://shines871.github.io/idle-lineage-class/**;本專案原是「原版 + 加掛外掛」的鏡像站。
 - **🛑 2026-07-06 起本專案獨立維護,不再跟進原作者版本(使用者決定)**:原本「每小時自動同步原版」的整組機制——GitHub workflow `sync-upstream.yml`、Cloudflare Worker `cf-sync-trigger/`(已 `wrangler delete`)、腳本 `scripts/sync-upstream.mjs`、首頁同步時間 `last-sync.json`——已全部從 repo 移除,只留 git 歷史。**背景沒有任何自動同步在跑**;首頁跑馬燈已公告「伺服器永久開放,但不再跟進原作者版本」。
-- 結構:`index.html`(殼)＋`js/*.js`(遊戲邏輯,00-data…等多檔)＋`css/`(樣式)＋`assets/`(圖,含 `anim/` 動畫幀)＋`public/assets/`(登入圖)＋根目錄 `afk-*.js`(外掛)。遊戲全域(`DB`/`tick`/`saveGame`/`MAP_CATEGORIES`…)定義在 `js/*.js`(一般 script,全域共用),外掛 `<script>` 排在 `</body>` 前、作者 js 之後,載入時全域已就緒。
+- 結構:`index.html`(殼)＋`js/*.js`(遊戲邏輯,00-data…等多檔)＋`css/`(樣式)＋`assets/`(圖,含 `anim/` 動畫幀)＋`public/assets/`(登入圖)＋`js/afk/afk-*.js`(外掛，2026-07 由根目錄移入)。遊戲全域(`DB`/`tick`/`saveGame`/`MAP_CATEGORIES`…)定義在 `js/*.js`(一般 script,全域共用),外掛 `<script>` 排在 `</body>` 前、作者 js 之後,載入時全域已就緒。
 - **要看原版更新了什麼 / 選擇性移植原版功能 → 跑 `/upstream-diff` skill**(`.claude/skills/upstream-diff/`,2026-07-10 建):以 `upstream-checkpoint.json` 的 `reviewedUpstreamCommit` 為錨點,對上游本機 clone(`D:/otherPersonRepos/idle-lineage-class`)diff 分析 → 產出功能菜單報告(`upstream-reviews/`)給使用者挑 → 逐功能 3-way 移植(分家點兩邊 blob 等價,`git apply -3` 可用;assets 用 `git archive | tar -x` 搬,中文檔名安全)。**🚨 分家後兩邊每支核心 js 都各自改過,絕不可整檔覆蓋**;舊的「整檔覆蓋式自動同步」永久作廢(腳本留在 git 歷史,勿撈回來用)。
 
 ## 🔄 要講「上游也是這樣」之前,先 `git -C <上游> pull`——舊 clone 會讓結論整個相反
@@ -18,7 +18,7 @@
 
 移植完(或大範圍搬功能後)跑這三項:
 
-1. **掛點**:新模組「對外要被別人呼叫」的函式逐支 `grep -rn '<函式名>' js/ afk-*.js` ——**只找到定義那一行 = 漏掛**。反向也要:上游是在哪呼叫的(`grep` 上游 clone),那個呼叫點在我們這邊是不是被舊版程式碼覆蓋掉了(我們的 `js/05` 停在舊經驗模型,整段沒有那行)。
+1. **掛點**:新模組「對外要被別人呼叫」的函式逐支 `grep -rn '<函式名>' js/` ——**只找到定義那一行 = 漏掛**。反向也要:上游是在哪呼叫的(`grep` 上游 clone),那個呼叫點在我們這邊是不是被舊版程式碼覆蓋掉了(我們的 `js/05` 停在舊經驗模型,整段沒有那行)。
 2. **素材**:用**遊戲自己組路徑的那支函式**去驗檔案存在,不要憑欄位。物品圖示走 `getIconUrl(d)`(多數道具沒有 `icon`/`img` 欄位、是拿**中文名**去組 `assets/icons/{items,armors,weapons,accessories}/<名>.png`——查 `d.icon` 會得到「全部都在」的假綠燈,踩過);戰場 sprite 分兩種路徑:怪物走 `assets/anim/<名>/idle_0.png`(平面),**寵物/召喚物/精靈走 `assets/anim/<名>/d0..d7/`(8 方向),缺 8 方向就完全不顯示、無錯誤訊息**。
 3. **跟上游對素材清單**:`git -C <上游> -c core.quotepath=false ls-files assets | sort` 與我方 `comm -23` 比一次(**兩邊都要 `core.quotepath=false`,否則中文檔名一邊是 `\3xx` 跳脫、diff 全錯**)。差集要逐一判斷「屬於沒移植的功能(可略)」還是「該搬卻漏搬」。
    **⚠️ 但 `comm -23` 只抓得到「缺檔」,抓不到「兩邊都有、內容卻不同」**(玩家回報「耳環有黑底」才發現:同名檔案我方是舊的黑底版、上游早已換成透明底)。**要比 blob sha,不是比檔名**:`ls-files -s` 取 sha → 取兩邊交集比對。找到差異別急著覆蓋——**逐張判斷是「上游修好了我方沒跟」還是「我方刻意改的」**(該次 6 張有差,只有 1 張是真問題,其餘是像素微差、不該動)。搬檔一律 `git archive <上游> HEAD "<路徑>" | tar -x -C .`(中文檔名安全);**`desktop.ini` 這種 OS 垃圾不要跟著搬**。改完 assets 記得 `node scripts/gen-manifests.mjs`。
@@ -162,7 +162,7 @@
 
 > 通用補坑碼一律寫進核心;只有「手機專屬的 CSS/版面覆寫」才留 `afk-mobile.js`。
 > - **⚠️ 手機 CSS 覆寫「版面容器」時,若寫死 `display:… !important`,小心 specificity 蓋過遊戲用來『隱藏』該容器的 `.hidden{display:none!important}` → 畫面關不掉(踩過 2026-07-06)**:遊戲用 `#creation-screen.hidden{display:none!important}`(specificity 1,1,0)隱藏登入/創角畫面;外掛的 `body.m-mobile #creation-screen{display:block!important}` 是 (1,1,1) 更高 → 即使加了 `.hidden` 也被外掛的 `display:block` 壓著不隱藏,載入存檔/建角進遊戲後登入畫面仍蓋在遊戲上,玩家表現=「卡在選角畫面進不去」(且 DOM 上 `.hidden` 有加、`classList.contains('hidden')` 為 true,只有 computed `display` 是 block,極易誤判)。**判準/解法:任何「會被 `.hidden`(或其他隱藏 class)切換顯示」的容器,外掛覆寫它的 `display`/`visibility` 一律加 `:not(.hidden)` 條件**(`body.m-mobile #creation-screen:not(.hidden){…}`)。自我檢查:改到 `#creation-screen`/`#game-screen` 這種「整屏切換」容器的手機 CSS,有沒有無條件 `display:…!important`?有就補 `:not(.hidden)`,並實測「載入存檔→有真的進到遊戲、登入畫面消失」。
-> - **⚠️ 外掛「自建遊戲物件」(如木人場自 spawn 怪)缺欄位會讓整個系統安靜失效**:核心 `getTarget` 改成鎖 `_born`(最早出生)後,木人場自建怪沒這欄位 → 全場鎖不到目標 → 全體不攻擊、DPS 恆 0,**無錯誤無警告**。**判準:改核心「怪物生成」欄位(`spawnMob` 的 `{...}` 內容)時,grep 外掛有沒有自建同型物件(`mapState.mobs[` in afk-*.js),欄位要對齊或核心要容錯。**
+> - **⚠️ 外掛「自建遊戲物件」(如木人場自 spawn 怪)缺欄位會讓整個系統安靜失效**:核心 `getTarget` 改成鎖 `_born`(最早出生)後,木人場自建怪沒這欄位 → 全場鎖不到目標 → 全體不攻擊、DPS 恆 0,**無錯誤無警告**。**判準:改核心「怪物生成」欄位(`spawnMob` 的 `{...}` 內容)時,grep 外掛有沒有自建同型物件(`mapState.mobs[` in js/afk/afk-*.js),欄位要對齊或核心要容錯。**
 > - **⚠️ 外掛插 DOM 的錨點要錨「穩定的容器 id」(如 `#main-menu`),不要錨標題/包裝層的父子關係**:錨不到時外掛只會安靜 return——**頁面照常、console 無警告、smoke 也驗不到**(首頁跑馬燈就這樣消失過,玩家回報才發現)。改過首頁版面後要人工掃一輪首頁(跑馬燈/加掛版徽章/外掛框都在、樣式沒退化),這些不在 smoke 範圍。
 
 ## 🩺 玩家回報類的取證工具(afk-diag):自己一定要帶版本編號,而且要「壞掉時還讀得到」
@@ -370,7 +370,7 @@
 自動同步停了之後衝突變少,但多 session/多裝置同時動 repo 仍可能撞。教訓照舊:
 - **只有 `sw.js` / `version.json`(產生檔)衝突**:**先手動刪衝突標記留單一版本**,再重跑 `node scripts/stamp-sw-version.mjs` → `git add -A` → `git rebase --continue`。**⚠ stamp 只會 regex 換掉 `CODE_VERSION` 值、不會清 `<<<<<<< / ======= / >>>>>>>` 標記**——標記留在 `sw.js` 裡=語法錯誤 → Service Worker 裝不起來 → **PWA 離線快取整組失效,但頁面照常渲染、smoke 照過、肉眼看不出來**(踩過 2026-07-05:一段衝突標記在 sw.js 裡躺了好幾個 commit 才被抓到)。
 - **`index.html` 也衝突**:**stamp 不會碰 index.html**,盲目 `git add -A` 會把標記原封不動 commit 進去 → 推上去**整頁壞掉**(踩過 2026-06-28)。**正解:先 `git diff --name-only --diff-filter=U` 看有哪些衝突檔;index.html 要手動開來解**,再 stamp、`git add -A`、`rebase --continue`。
-- **收尾自我檢查(push 前)**:`grep -rnE "^<<<<<<< |^>>>>>>> |^=======$" index.html sw.js afk-*.js` 必須是空的(**sw.js 一定要一起 grep**);`grep -c afk-<某外掛>.js index.html` 每支應為 1(沒有重複 script)。**不能只靠 smoke,一定要 grep 衝突標記**(瀏覽器把標記當文字、script 照載;sw.js 壞了頁面也照跑)。(注意 `=======$` 要錨定行尾,否則會誤中 sw.js 註解裡的 `======` 裝飾線。)
+- **收尾自我檢查(push 前)**:`grep -rnE "^<<<<<<< |^>>>>>>> |^=======$" index.html sw.js js/afk/afk-*.js` 必須是空的(**sw.js 一定要一起 grep**);`grep -c afk-<某外掛>.js index.html` 每支應為 1(沒有重複 script)。**不能只靠 smoke,一定要 grep 衝突標記**(瀏覽器把標記當文字、script 照載;sw.js 壞了頁面也照跑)。(注意 `=======$` 要錨定行尾,否則會誤中 sw.js 註解裡的 `======` 裝飾線。)
 
 ### push 後要等 GitHub Pages 重建完成才算交付,並主動通知使用者
 

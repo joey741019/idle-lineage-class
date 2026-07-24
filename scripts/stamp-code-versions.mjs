@@ -1,4 +1,4 @@
-// 把 index.html 裡 js/*.js、css/*.css、根目錄 afk-*.js 的 ?v= 對齊「檔案內容的 sha1 前 10 碼」。
+// 把 index.html 裡 js/*.js、css/*.css、js/afk/afk-*.js 的 ?v= 對齊「檔案內容的 sha1 前 10 碼」。
 //   (2026-07-18 起 afk-*.js 也納入自動化:原本 afk-*.js 的 ?v= 是手動 date 版本,反覆漏 bump——
 //    今天 afk-wiki 改了內容卻沒換號,已載入舊版的玩家吃快取、看不到新功能。改成內容雜湊後永不再漏。)
 //
@@ -25,7 +25,7 @@ const hashOf = (rel) => createHash('sha1').update(readFileSync(join(ROOT, rel)))
 let html = readFileSync(INDEX, 'utf8');
 const stale = [];
 
-html = html.replace(/((?:js|css)\/[\w.-]+\.(?:js|css)|afk-[\w.-]+\.js)\?v=([0-9a-z]+)/g, (whole, path, cur) => {
+html = html.replace(/((?:js|css)\/(?:afk\/)?[\w.-]+\.(?:js|css))\?v=([0-9a-z]+)/g, (whole, path, cur) => {
   let want;
   try { want = hashOf(path); } catch { return whole; }   // 檔案不存在(外部路徑等)→ 原樣保留
   if (cur === want) return whole;

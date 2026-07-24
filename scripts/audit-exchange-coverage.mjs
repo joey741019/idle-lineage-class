@@ -16,7 +16,7 @@
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 
 const jsFiles = existsSync('js') ? readdirSync('js').filter((n) => /\.js$/.test(n)) : [];
-const dex = existsSync('afk-dex.js') ? readFileSync('afk-dex.js', 'utf8') : '';
+const dex = existsSync('js/afk/afk-dex.js') ? readFileSync('js/afk/afk-dex.js', 'utf8') : '';
 
 // 已知「非發裝備兌換」的結構,排除掉免得每次都當誤報跳出來(確認過不是掉落查詢來源的才放這)。
 const KNOWN_NON_ITEM = new Set(['PLEDGE_CFG']);   // 血盟設定,非物品兌換

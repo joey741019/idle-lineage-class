@@ -39,7 +39,7 @@ const rd = (p) => readFileSync(resolve(ROOT, p), 'utf8');
 // ── 1. 衝突標記 ──────────────────────────────────────────────
 const CONFLICT = /^(<{7}|={7}|>{7})/m;
 const checkFiles = ['index.html', 'sw.js'];
-for (const f of readdirSync(ROOT).filter((n) => /^afk-.*\.js$/.test(n))) checkFiles.push(f);
+for (const f of (existsSync(resolve(ROOT, 'js/afk')) ? readdirSync(resolve(ROOT, 'js/afk')) : []).filter((n) => /^afk-.*\.js$/.test(n))) checkFiles.push('js/afk/' + f);
 for (const f of checkFiles) {
   if (existsSync(resolve(ROOT, f)) && CONFLICT.test(rd(f))) fails.push(`衝突標記殘留:${f}(rebase 沒解乾淨,push 會壞掉整頁)`);
 }
@@ -47,7 +47,7 @@ for (const f of checkFiles) {
 // ── 2. 外掛 <script> 引用 ────────────────────────────────────
 let html = '';
 try { html = rd('index.html'); } catch {}
-for (const f of readdirSync(ROOT).filter((n) => /^afk-.*\.js$/.test(n))) {
+for (const f of (existsSync(resolve(ROOT, 'js/afk')) ? readdirSync(resolve(ROOT, 'js/afk')) : []).filter((n) => /^afk-.*\.js$/.test(n))) {
   if (!html.includes(f)) fails.push(`index.html 沒引用 ${f}(漏補 <script>,功能不生效或會被同步覆蓋)`);
 }
 
@@ -56,7 +56,7 @@ try {
   const parts = [];
   if (existsSync(resolve(ROOT, 'index.html'))) parts.push(readFileSync(resolve(ROOT, 'index.html')));
   if (existsSync(resolve(ROOT, 'manifest.webmanifest'))) parts.push(readFileSync(resolve(ROOT, 'manifest.webmanifest')));
-  for (const f of readdirSync(ROOT).filter((n) => /^afk-.*\.js$/.test(n)).sort()) parts.push(readFileSync(resolve(ROOT, f)));
+  for (const f of (existsSync(resolve(ROOT, 'js/afk')) ? readdirSync(resolve(ROOT, 'js/afk')) : []).filter((n) => /^afk-.*\.js$/.test(n)).sort()) parts.push(readFileSync(resolve(ROOT, 'js/afk/' + f)));
   for (const dir of ['js', 'css']) {
     const d = resolve(ROOT, dir);
     if (existsSync(d)) for (const f of readdirSync(d).filter((n) => /\.(js|css)$/.test(n)).sort()) parts.push(readFileSync(resolve(d, f)));

@@ -29,7 +29,7 @@ disable-model-invocation: true
    - **smoke 沒有任何自動排程在跑(自動同步已停用)，這裡就是唯一的把關點，不可跳過。**
 
 5. **衝突標記把關**(rebase 沒解乾淨會壞整頁)
-   - `grep -nE "^<<<<<<<|^=======|^>>>>>>>" index.html sw.js afk-*.js` 必須為空。
+   - `grep -nE "^<<<<<<<|^=======|^>>>>>>>" index.html sw.js js/afk/afk-*.js` 必須為空。
    - 順手確認每支外掛在 index.html 只出現一次 `<script>`(沒有重複)。
 
 6. **最後把關:`?v=` 全對得上**
