@@ -78,7 +78,7 @@
        scoped 樣式(入口列寬/皮)照樣命中;桌機祖先無 transform,position:fixed 對齊 viewport。 */
     '#afk-plugin-modal{display:none;position:fixed;inset:0;top:var(--orig-bar-h,0px);z-index:900;background:rgba(2,6,23,.72);align-items:center;justify-content:center;padding:24px;}',
     '#afk-plugin-modal.is-open{display:flex;}',
-    '#afk-plugin-modal .afk-pm-panel{position:relative;width:100%;max-width:22rem;max-height:calc((100vh - var(--orig-bar-h,0px)) * .86);overflow-y:auto;',
+    '#afk-plugin-modal .afk-pm-panel{position:relative;width:100%;max-width:22rem;max-height:calc((100vh - var(--orig-bar-h,0px)) * .86);',
       'padding:28px 18px 20px;border:1px solid rgba(182,138,57,.5);border-radius:16px;',
       'background:linear-gradient(180deg,rgba(20,28,44,.98),rgba(11,17,30,.98));box-shadow:0 18px 60px rgba(0,0,0,.6);',
       'display:flex;flex-direction:column;gap:14px;align-items:center;}',
@@ -90,7 +90,7 @@
       'border:1px solid rgba(148,163,184,.4);background:rgba(15,23,42,.6);color:#cbd5e1;font-size:16px;line-height:1;',
       'cursor:pointer;display:flex;align-items:center;justify-content:center;}',
     '#afk-plugin-modal .afk-pm-close:hover{filter:brightness(1.4);}',
-    '#afk-plugin-modal-body{display:flex;flex-direction:column;gap:12px;align-items:center;width:100%;}',
+    '#afk-plugin-modal-body{display:flex;flex-direction:column;gap:12px;align-items:center;width:100%;overflow-y:auto;min-height:0;flex:1 1 auto;}',
 
     /* 📢 公告跑馬燈:放在 #main-menu 第一個子層(首頁按鈕上方);紅底捲動,游標移上去暫停。
        (v3.0.40 作者登入頁改成藝術舞台後,標題不再是 #creation-screen 直接子層,改錨定 #main-menu。) */

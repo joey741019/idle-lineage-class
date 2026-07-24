@@ -53,12 +53,11 @@
       '<div class="afk-si-row afk-si-verrow"><span class="afk-si-ver"></span></div>' +
       '<div class="afk-si-row afk-si-updrow"><span class="afk-si-upd"></span></div>';
     menu.appendChild(foot);
-    // 連結:巴哈討論串一列;Line群與Discord群同一列(afk-skin 會排到框內較下方)
+    // 連結:巴哈討論串一列(本分支版分支自 301 樓的加掛版;afk-skin 會排到框內較下方)
     var links = document.createElement('div');
     links.id = 'afk-syncinfo-links';
     links.innerHTML =
-      '<div class="afk-si-row"><a class="afk-si-link" href="https://forum.gamer.com.tw/C.php?bsn=84452&amp;snA=8362" target="_blank" rel="noopener">巴哈討論串</a>（本加掛版發布在 <a class="afk-si-link" href="https://forum.gamer.com.tw/Co.php?bsn=84452&amp;sn=37297" target="_blank" rel="noopener">301</a> 樓）</div>' +
-      '<div class="afk-si-row"><a class="afk-si-link" href="https://line.me/ti/g2/RRXPx6rMc8ZhxiuNSSziKtcjnhc2AXEPuIOpVA?utm_source=invitation&amp;utm_medium=link_copy&amp;utm_campaign=default" target="_blank" rel="noopener">[加入Line群討論]</a> <a class="afk-si-link" href="https://discord.gg/NNe6Un7PK" target="_blank" rel="noopener">[加入Discord群]</a></div>';
+      '<div class="afk-si-row"><a class="afk-si-link" href="https://forum.gamer.com.tw/C.php?bsn=84452&amp;snA=8362" target="_blank" rel="noopener">巴哈討論串</a>（本分支版以 <a class="afk-si-link" href="https://forum.gamer.com.tw/Co.php?bsn=84452&amp;sn=37297" target="_blank" rel="noopener">301</a> 樓的加掛版進行分支）</div>';
     menu.appendChild(links);
     console.log('[AFK-syncinfo] hooks OK — 首頁顯示原作者與加掛版版本號。');
 
@@ -72,8 +71,8 @@
       .then(function (j) {
         if (!j || !j.app) return;
         // 第一列:加掛版版本號 · 更新日誌連結
-        verEl.innerHTML = '加掛版 v' + j.app +
-          '<span class="afk-si-dot">·</span><a class="afk-si-link" href="https://github.com/pp771007/idle-lineage-class/releases" target="_blank" rel="noopener">更新日誌</a>';
+        verEl.innerHTML = '加掛分支版 v' + j.app +
+          '<span class="afk-si-dot">·</span><a class="afk-si-link" href="https://github.com/joey741019/idle-lineage-class/releases" target="_blank" rel="noopener">更新日誌</a>';
         verRow.style.display = '';
         // 第二列:最後更新時間(台灣時間),自成一行放在版本號下面
         var t = fmtUpdTime(j.buildAt, j.build);
