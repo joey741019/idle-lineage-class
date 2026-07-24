@@ -1,0 +1,59 @@
+# GitHub Pages 部署：main 分支 → 站台根目錄 (/)，dev 分支 → /dev 子路徑。
+#   一次 workflow 同時 checkout 兩個分支組合成單一 Pages 產物：
+#     /       ← main（正式版）
+#     /dev/   ← dev（開發預覽版）
+#   main 或 dev 任一分支被 push 都會重建整站（兩邊都放同一份此檔，故任一 push 都完整重組）。
+# ⚠ 使用前：GitHub repo → Settings → Pages → Build and deployment → Source 要設成「GitHub Actions」。
+name: Deploy Pages (main → /, dev → /dev)
+
+on:
+  push:
+    branches: [main, dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同時只跑一個 Pages 部署；不取消進行中的（避免半途中斷）。
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main → 站台根目錄 (/)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: dist
+
+      - name: Checkout dev → /dev 子路徑
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          path: dist/dev
+
+      - name: 清掉 artifact 內的 .git / .github 並加 .nojekyll
+        run: |
+          rm -rf dist/.git dist/dev/.git
+          rm -rf dist/.github dist/dev/.github
+          touch dist/.nojekyll
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact（整站：main 在根、dev 在 /dev）
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
