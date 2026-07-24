@@ -339,6 +339,34 @@ function allyName(a) {
     if (a.name) return a.name;
     return ({ knight: '騎士', mage: '法師', elf: '妖精', dark: '黑暗妖精', illusion: '幻術士', dragon: '龍騎士', warrior: '戰士', royal: '王族' })[a.cls] || a.cls || ('存檔' + (a._slot || ''));
 }
+// 🤝 傭兵逐兵設定檔 lineage_idle_save_<currentSlot>_allies（純傭兵名字為鍵·只壓縮不簽章·不匯出；解僱重僱不失設定）
+//   結構：{ v:1, partners:{ "<傭兵名字>":{ healSkill, healHpPct, castMpPct, potHpPct, hpSkillPct, autoBuff:{sid:bool} } } }
+//   真相來源＝此檔：招募 buildAlly 時 hydrate 回 ally._*；隊伍面板改設定時 write-through 回此檔（見 js/10 setAlly*）。
+//   ⚠ 綁 currentSlot(當前角色)；名字改名→舊條目變孤兒不清(使用者拍板·改回原名可救回)；不進主 blob/不匯出(saveGame 只序列化 {v,p,ms,ticks})。
+function _allyCfgKey() { return 'lineage_idle_save_' + currentSlot + '_allies'; }
+function _allyCfgLoad() {
+    try {
+        let raw = _lzGet(_allyCfgKey());
+        if (!raw) return { v: 1, partners: {} };
+        let o = JSON.parse(raw);
+        if (!o || typeof o !== 'object') return { v: 1, partners: {} };
+        if (!o.partners || typeof o.partners !== 'object') o.partners = {};
+        return o;
+    } catch (e) { return { v: 1, partners: {} }; }
+}
+function allyCfgGet(name) { if (!name) return null; return _allyCfgLoad().partners[name] || null; }
+function _allyCfgWrite(name, mutate) {
+    if (!name) return;
+    try {
+        let o = _allyCfgLoad(); o.v = 1;
+        if (!o.partners[name] || typeof o.partners[name] !== 'object') o.partners[name] = {};
+        mutate(o.partners[name]);
+        _lzSet(_allyCfgKey(), JSON.stringify(o));
+    } catch (e) {}
+}
+function allyCfgSet(name, field, val) { _allyCfgWrite(name, function (c) { c[field] = val; }); }
+function allyCfgSetAutoBuff(name, sid, on) { _allyCfgWrite(name, function (c) { if (!c.autoBuff || typeof c.autoBuff !== 'object') c.autoBuff = {}; c.autoBuff[sid] = !!on; }); }
+
 function buildAlly(slotN) {
     slotN = String(slotN);
     let raw = _saveUnwrap(_lzGet('lineage_idle_save_' + slotN)).payload;   // 🛡️ 先解存檔簽章（招募傭兵讀別的存檔位；不驗章、僅取 payload）
@@ -380,6 +408,18 @@ function buildAlly(slotN) {
     ally._healHpPct = 70;   // 🤝 治癒施放 HP% 門檻預設（可於隊伍面板改）
     ally.mp = ally.mmp;   // 召喚時滿魔
     { let _w = (ally.eq && ally.eq.wpn) ? DB.items[ally.eq.wpn.id] : null; ally._rapidfire = (_w && _w.isBow && _w.rapidfire) ? _w.rapidfire : 0; }   // 妖精弓：記錄連射發動機率
+    // 🤝 逐兵設定 hydrate：從 lineage_idle_save_<currentSlot>_allies 依「傭兵名字」灌回 6 欄位（不帶+半帶項）→ 重僱不失設定。缺欄位保留上方剛設的預設。
+    try {
+        let _cfg = allyCfgGet(ally._allyName);
+        if (_cfg) {
+            if (typeof _cfg.healSkill === 'string') ally._healSkill = _cfg.healSkill;
+            if (typeof _cfg.healHpPct === 'number') ally._healHpPct = _cfg.healHpPct;
+            if (typeof _cfg.castMpPct === 'number') ally._castMpPct = _cfg.castMpPct;
+            if (typeof _cfg.potHpPct === 'number') ally._potHpPct = _cfg.potHpPct;
+            if (typeof _cfg.hpSkillPct === 'number') ally._hpSkillPct = _cfg.hpSkillPct;
+            if (_cfg.autoBuff && typeof _cfg.autoBuff === 'object') ally._autoBuff = Object.assign({}, _cfg.autoBuff);
+        }
+    } catch (e) {}
     return ally;
 }
 // 協力角色攻擊一次（自包含，直接用 ally 的真實衍生值；法師走魔法、其餘走物理）

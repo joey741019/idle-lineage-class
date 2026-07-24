@@ -2275,17 +2275,18 @@ function switchToAllyChar(slot) {
     loadGame();          // 載入該角色並切換畫面（同載入畫面「載入」路徑）
 }
 function setAllyAtkSkill(slot, val) { let a = _findAlly(slot); if (a) { a._atkSkill = val || ''; saveGame(); } }   // _atkSkill 即時生效（傭兵攻擊路徑直接讀 ally._atkSkill）
-function setAllyHealSkill(slot, val) { let a = _findAlly(slot); if (a) { a._healSkill = val || ''; saveGame(); } }   // _healSkill 儲存待 Phase 3 傭兵自動補血讀取
+function setAllyHealSkill(slot, val) { let a = _findAlly(slot); if (a) { a._healSkill = val || ''; allyCfgSet(a._allyName, 'healSkill', a._healSkill); saveGame(); } }   // _healSkill 儲存待 Phase 3 傭兵自動補血讀取（🤝 write-through 逐兵設定檔）
 function setAllyConvertSkill(slot, val) { let a = _findAlly(slot); if (a) { a._convertSkill = val || ''; saveGame(); } }   // 🔄 v2.6.4 轉換技能（type:'convert'／立方和諧）：即時生效（allyCubeTick/轉換施放路徑直接讀 ally._convertSkill）
-function setAllyHealHp(slot, val) { let a = _findAlly(slot); if (a) { a._healHpPct = Math.max(0, Math.min(100, parseInt(val) || 0)); saveGame(); } }
-function setAllyPotHp(slot, val) { let a = _findAlly(slot); if (a) { a._potHpPct = Math.max(0, Math.min(100, parseInt(val) || 0)); saveGame(); } }   // 🍶 v2.6.4 喝藥水門檻（獨立·低於此%→喝隊長藥水；0=關閉）
-function setAllyHpSkill(slot, val) { let a = _findAlly(slot); if (a) { a._hpSkillPct = Math.max(0, Math.min(100, parseInt(val) || 0)); saveGame(); } }   // 🛡️ v2.6.4 停耗HP技門檻（獨立·低於此%→暫停龍騎HP技/轉換技/立方和諧；0=關閉）
-function setAllyCastMp(slot, val) { let a = _findAlly(slot); if (a) { a._castMpPct = Math.max(0, Math.min(100, parseInt(val) || 0)); saveGame(); } }   // 🆕 v2.6.27 施法MP門檻（MP% 高於此才施放攻擊技·0=不限·allyActWithSkillGate 讀 allyCastMpPct）
+function setAllyHealHp(slot, val) { let a = _findAlly(slot); if (a) { a._healHpPct = Math.max(0, Math.min(100, parseInt(val) || 0)); allyCfgSet(a._allyName, 'healHpPct', a._healHpPct); saveGame(); } }
+function setAllyPotHp(slot, val) { let a = _findAlly(slot); if (a) { a._potHpPct = Math.max(0, Math.min(100, parseInt(val) || 0)); allyCfgSet(a._allyName, 'potHpPct', a._potHpPct); saveGame(); } }   // 🍶 v2.6.4 喝藥水門檻（獨立·低於此%→喝隊長藥水；0=關閉）
+function setAllyHpSkill(slot, val) { let a = _findAlly(slot); if (a) { a._hpSkillPct = Math.max(0, Math.min(100, parseInt(val) || 0)); allyCfgSet(a._allyName, 'hpSkillPct', a._hpSkillPct); saveGame(); } }   // 🛡️ v2.6.4 停耗HP技門檻（獨立·低於此%→暫停龍騎HP技/轉換技/立方和諧；0=關閉）
+function setAllyCastMp(slot, val) { let a = _findAlly(slot); if (a) { a._castMpPct = Math.max(0, Math.min(100, parseInt(val) || 0)); allyCfgSet(a._allyName, 'castMpPct', a._castMpPct); saveGame(); } }   // 🆕 v2.6.27 施法MP門檻（MP% 高於此才施放攻擊技·0=不限·allyActWithSkillGate 讀 allyCastMpPct）
 // 🆕 v3.0.97 逐兵「自動維持」開關（覆寫 _mercAutoOn·存 ally._autoBuff·隨存檔）。關閉 self-buff→立即結束該 buff 並重算（比照玩家取消打勾立即結束）；召喚/HoT/淨化/立方 屬即時或全隊·僅停止再施放不強制解除。
 function setAllyAutoBuff(slot, sid, on) {
     let a = _findAlly(slot); if (!a || !sid) return;
     if (!a._autoBuff) a._autoBuff = {};
     a._autoBuff[sid] = !!on;
+    allyCfgSetAutoBuff(a._allyName, sid, !!on);   // 🤝 write-through 逐兵設定檔（自動維持buff override 隨傭兵名字持久）
     if (!on && a.buffs && (a.buffs[sid] || 0) > 0) {   // 關閉→即時結束自我增益 buff（召喚/HoT 走各自到期·不在此強制解）
         let sk = DB.skills[sid]; a.buffs[sid] = 0; if (sk && sk.haste) a.buffs.haste = 0;
         try { if (typeof _allyLevelRecompute === 'function') _allyLevelRecompute(a); } catch (e) {}
