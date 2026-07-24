@@ -31,6 +31,6 @@
 
 - **遊戲本體**：由 **巴哈姆特 秋玥** 製作 — 原版：https://shines871.github.io/idle-lineage-class/
 - **加掛版**：由 **peter（301 的 C 大）** 在原作之上加掛離線掛機、小百科、掉落查詢、手機版面等功能 — 加掛版原站：https://pp771007.github.io/idle-lineage-class/
-- **本站**：以 **peter（301 的 C 大）的加掛版 v3.4.12** 為基礎的分支，版號從 **v1.0.0** 起獨立起算（伺服器永久開放）。加掛版有自己的版本號（首頁可看到「加掛版 vX.Y.Z」），每次更新內容見 [Releases](https://github.com/joey741019/idle-lineage-class/releases)。
+- **本站**：以 **peter（301 的 C 大）的加掛版 v3.4.12** 為基礎的衍生版，版號從 **v1.0.0** 起獨立起算（伺服器永久開放）。加掛衍生版有自己的版本號（首頁可看到「加掛衍生版 vX.Y.Z」），每次更新內容見 [Releases](https://github.com/joey741019/idle-lineage-class/releases)。
 
 - 巴哈討論串：https://forum.gamer.com.tw/C.php?page=1&bsn=84452&snA=8362&tnum=273
