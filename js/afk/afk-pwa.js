@@ -33,7 +33,7 @@
 (function () {
   'use strict';
 
-  var ICON = 'pwa-icon-192.png';
+  var ICON = 'assets/pwa-icon-192.png';
   var reg = null;            // ServiceWorkerRegistration
   var deferredPrompt = null; // 攔下來的 beforeinstallprompt，供安裝連結點擊時用
 
