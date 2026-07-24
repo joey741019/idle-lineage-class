@@ -45,6 +45,14 @@
 - 舊 tag 格式 `vYYYYMMDD-HHMM` 是自動同步時代的產物,**不再使用**;歷史 Release 保留不動。
 - 需要台灣時間戳時注意:**Windows git-bash 的 `TZ='Asia/Taipei' date` 不生效**(沒 tzdata,默默給 UTC;踩過 2026-07-06 tag 時間差 8 小時)→ 用 `date -u -d '+8 hours' +%Y%m%d-%H%M` 換算。
 
+### 🍴 本 fork（joey741019 / JoeyChen）發版補充（2026-07-24 起）
+
+- **身分/譜系**：本 repo＝我的 fork，分家自 **peter（301 的 C 大）加掛版 v3.4.12**（`1c8b9bc38`）← 原作者 **秋玥（shines871）v3.0.65**。版號**從 v1.0.0 重新起算**（存 `version.json` 的 `app`）。遊玩網址改成本站 `https://joey741019.github.io/idle-lineage-class/`。
+- **Release note 寫法＝參照 C大（peter）的玩家視角風格**：分組 `✨ 新功能／🛠️ 問題修正／⚙️ 調整`（沒有的組省略）、每條一句白話、不要術語；結尾附本站遊玩網址＋「原始碼可由下方 Source code 下載」。標題用 `《放置天堂 - 以血為盟》vX.Y.Z`。**秋玥（原作者）沒有 release note 可參考**（無 GitHub Release、commit 全是「1」），故一律照 C大 風格。
+- **⭐ Release note 必涵蓋「兩版之間改了什麼」（使用者明訂 2026-07-24）**：發版時 `git log <上一版tag>..HEAD --oneline` 撈區間 commits，逐條翻成玩家視角條目寫進去，不是只寫一句「新版」。
+- **本環境操作差異（Linux·非 peter 的 Windows）**：① **無 `gh` CLI** → 建 Release 用 **GitHub REST API ＋ fine-grained PAT**（`Contents: write`；使用者當下給、用完不留），不是 `gh release create`。② **push 走 SSH deploy key**（`~/.ssh/joey741019_deploy`·port 22）。③ commit 作者固定 **JoeyChen-AI ＜9440641+joey741019@users.noreply.github.com＞**（名字 JoeyChen-AI、email 掛 joey741019 帳號才計入 Contributors；**不加 Co-Authored-By／不含 claude**）。
+- **節奏**：預設**只 commit、不主動 push、更不自動發版**；push 與發版都要使用者明講（改東西先 commit 就停）。
+
 ## ⭐ 程式碼修改原則:依「功能性質」決定寫哪裡,不再一律偏好外掛
 
 > **🔓 2026-07-06 起可直接修改原作者程式碼(`js/*.js`/`css/*.css`/`index.html`)——已停止與原版同步,不再有「被覆蓋」問題。**
