@@ -939,27 +939,30 @@ function renderObelNPC(div) {
             return `<label class="flex items-center gap-2 cursor-pointer py-1 px-2 rounded ${checked ? 'bg-sky-900/50' : ''}"><input type="checkbox" ${checked ? 'checked' : ''} onclick="onObelMobToggle('${id}')"> <span class="${getMobColor(mb.lv)}">${mb.n}</span> <span class="text-xs text-slate-500">Lv${mb.lv}</span></label>`;
         }).join('');
     }
-    let canStart = _obelSel.mob && warrants >= 50;
+    let canStart8 = _obelSel.mob && warrants >= 50;
+    let canStart12 = _obelSel.mob && warrants >= 75;   // 🆕 12 小時方案：開銷 ×1.5＝75 張
     div.innerHTML = `
         <div class="flex flex-col gap-3 p-1">
-            <div class="text-slate-300 text-sm leading-relaxed">奧貝勒：你想搜索哪一頭魔物？給我 50 張王族搜索狀就能幫你追蹤。<br><span class="text-xs text-slate-400">持有王族搜索狀：<span class="text-green-400 font-bold">${warrants}</span> 張</span></div>
+            <div class="text-slate-300 text-sm leading-relaxed">奧貝勒：你想搜索哪一頭魔物？消耗王族搜索狀就能幫你追蹤（8 小時 50 張／12 小時 75 張）。<br><span class="text-xs text-slate-400">持有王族搜索狀：<span class="text-green-400 font-bold">${warrants}</span> 張</span></div>
             <select class="w-full bg-slate-900 border border-slate-600 text-white px-2 py-2 rounded text-sm" onchange="onObelMapChange(this.value)">${mapOpts}</select>
             ${_obelSel.map ? `<div class="bg-slate-800/40 border border-slate-700 rounded p-2 max-h-60 overflow-y-auto flex flex-col gap-0.5">${mobHtml || '<span class="text-slate-500 text-sm">此地區無可追蹤的怪物</span>'}</div>` : ''}
-            <button class="btn ${canStart ? 'bg-red-700 hover:bg-red-600 border-red-500' : 'bg-slate-600 border-slate-500 opacity-60 cursor-not-allowed'} py-2 px-4 font-bold" ${canStart ? '' : 'disabled'} onclick="obelStartTracking()">開始追蹤（消耗 50 張王族搜索狀）</button>
+            <button class="btn ${canStart8 ? 'bg-red-700 hover:bg-red-600 border-red-500' : 'bg-slate-600 border-slate-500 opacity-60 cursor-not-allowed'} py-2 px-4 font-bold" ${canStart8 ? '' : 'disabled'} onclick="obelStartTracking(8, 50)">開始追蹤 · 8 小時（消耗 50 張王族搜索狀）</button>
+            <button class="btn ${canStart12 ? 'bg-red-800 hover:bg-red-700 border-red-600' : 'bg-slate-600 border-slate-500 opacity-60 cursor-not-allowed'} py-2 px-4 font-bold" ${canStart12 ? '' : 'disabled'} onclick="obelStartTracking(12, 75)">開始追蹤 · 12 小時（消耗 75 張王族搜索狀）</button>
         </div>`;
 }
 function onObelMapChange(v) { _obelSel.map = v; _obelSel.mob = ''; let el = document.getElementById('interaction-content'); if(el) renderObelNPC(el); }
 function onObelMobToggle(id) { if(DB.mobs[id] && DB.mobs[id].boss) return; _obelSel.mob = (_obelSel.mob === id) ? '' : id; let el = document.getElementById('interaction-content'); if(el) renderObelNPC(el); }
-function obelStartTracking() {
+function obelStartTracking(hours, cost) {
+    hours = hours || 8; cost = cost || 50;   // 🔧 相容舊呼叫；方案：8h=50 張、12h=75 張(開銷×1.5)。效果端只讀 until，時長多寡自動吃(js/03)
     if(!_obelSel.mob || !_obelSel.map) return;
-    if(pledgeCountItem('new_item_241') < 50) { alert('王族搜索狀不足 50 張。'); return; }
-    let left = 50;
+    if(pledgeCountItem('new_item_241') < cost) { alert('王族搜索狀不足 ' + cost + ' 張。'); return; }
+    let left = cost;
     for(let it of player.inv) { if(it.id === 'new_item_241' && left > 0) { let take = Math.min(it.cnt, left); it.cnt -= take; left -= take; } }
     player.inv = player.inv.filter(it => it.cnt > 0);
-    player.tracking = { map: _obelSel.map, mob: _obelSel.mob, until: Date.now() + 8 * 3600 * 1000 };
+    player.tracking = { map: _obelSel.map, mob: _obelSel.mob, until: Date.now() + hours * 3600 * 1000 };
     _obelSel = { map: '', mob: '' };
     renderTabs(); saveGame();
-    logSys(`奧貝勒開始追蹤 <span class="text-amber-300 font-bold">${(DB.mobs[player.tracking.mob] || {}).n}</span>，持續 8 小時。`);
+    logSys(`奧貝勒開始追蹤 <span class="text-amber-300 font-bold">${(DB.mobs[player.tracking.mob] || {}).n}</span>，持續 ${hours} 小時。`);
     let el = document.getElementById('interaction-content'); if(el) renderObelNPC(el);
     updateUI();
 }
