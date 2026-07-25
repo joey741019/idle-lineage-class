@@ -1064,7 +1064,8 @@ function _petOutOwnerLabel(ownerKey, cache) {
     return label;
 }
 function renderPetStorageNPC(div, confirmUid) {
-    let list = petRoster();
+    // 🐾 顯示層排序：等級高→低（副本排序·不動 live _petRoster）；同級用 uid 穩定排序避免抖動。身份/出戰/存檔全走 uid+outSlot，改順序無副作用。
+    let list = petRoster().slice().sort((a, b) => (b.lv || 1) - (a.lv || 1) || (a.uid < b.uid ? -1 : a.uid > b.uid ? 1 : 0));
     let cha = (player.d && player.d.cha) || 0;
     let _ownerCache = {};
     let rows = list.map(p => {
