@@ -3112,28 +3112,42 @@ function _origBarH() {
   } catch (_) { return 0; }
 }
 
+// 是否已「選角進入遊戲」：#game-screen 顯示中（未帶 .hidden）＝在遊戲內；選單/創角畫面時它是 .hidden。
+function _origInGame() {
+  try {
+    var gs = document.getElementById('game-screen');
+    return !!(gs && !gs.classList.contains('hidden'));
+  } catch (_) { return false; }
+}
+
 // 官方版指引橫幅（中性·無指控）：僅在非官方網域顯示；若被移除可安全重掛（見 gameLoop）
+// 進遊戲後隱藏、其他畫面（選單/創角）保留：由 gameLoop 每輪呼叫本函式依 _origInGame() 兩向 toggle；
+// display:none → getBoundingClientRect().height=0 → _origBarSyncH 自動把 --orig-bar-h 歸 0、版面不留空白。
 function _origEnforce() {
   try {
     if (_origAuthorizedHost()) return;
-    if (!document.body || document.getElementById('_orig_pbar')) return;
-    var url = 'https://shines871.github.io/idle-lineage-class/';
-    var bar = document.createElement('div');
-    bar.id = '_orig_pbar';
-    bar.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:2147483647;'
-      + 'background:linear-gradient(90deg,#0d1f3a,#17408a,#0d1f3a);color:#eef4ff;'
-      + 'font:bold 15px/1.5 "Microsoft JhengHei","Segoe UI",Arial,sans-serif;'
-      + 'padding:11px 16px;text-align:center;letter-spacing:.3px;'
-      + 'box-shadow:0 2px 14px rgba(0,0,0,.45);border-bottom:2px solid #ffcf5a;';
-    // ⚠️中性措辭·勿加「盜版/未授權/廣告/惡意」等指控（授權允許非商業轉載→指控合法轉載者有毀謗風險）
-    bar.innerHTML = '📢 這是<span style="color:#ffcf5a">非官方轉載版本</span>，內容可能不是最新。'
-      + '本遊戲<span style="color:#ffcf5a">永久免費</span>，前往<span style="color:#ffcf5a">官方最新版</span>：'
-      + '<a href="' + url + '" style="color:#ffcf5a;font-weight:bold;text-decoration:underline">'
-      + 'shines871.github.io/idle-lineage-class</a>';
-    document.body.appendChild(bar);
+    if (!document.body) return;
+    var bar = document.getElementById('_orig_pbar');
+    if (!bar) {
+      var url = 'https://shines871.github.io/idle-lineage-class/';
+      bar = document.createElement('div');
+      bar.id = '_orig_pbar';
+      bar.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:2147483647;'
+        + 'background:linear-gradient(90deg,#0d1f3a,#17408a,#0d1f3a);color:#eef4ff;'
+        + 'font:bold 15px/1.5 "Microsoft JhengHei","Segoe UI",Arial,sans-serif;'
+        + 'padding:11px 16px;text-align:center;letter-spacing:.3px;'
+        + 'box-shadow:0 2px 14px rgba(0,0,0,.45);border-bottom:2px solid #ffcf5a;';
+      // ⚠️中性措辭·勿加「盜版/未授權/廣告/惡意」等指控（授權允許非商業轉載→指控合法轉載者有毀謗風險）
+      bar.innerHTML = '📢 這是<span style="color:#ffcf5a">非官方轉載版本</span>，內容可能不是最新。'
+        + '本遊戲<span style="color:#ffcf5a">永久免費</span>，前往<span style="color:#ffcf5a">官方最新版</span>：'
+        + '<a href="' + url + '" style="color:#ffcf5a;font-weight:bold;text-decoration:underline">'
+        + 'shines871.github.io/idle-lineage-class</a>';
+      document.body.appendChild(bar);
+      if (window.ResizeObserver) new ResizeObserver(_origBarSyncH).observe(bar);
+      else window.addEventListener('resize', _origBarSyncH);
+    }
+    bar.style.display = _origInGame() ? 'none' : '';
     _origBarSyncH();
-    if (window.ResizeObserver) new ResizeObserver(_origBarSyncH).observe(bar);
-    else window.addEventListener('resize', _origBarSyncH);
   } catch (_) {}
 }
 
