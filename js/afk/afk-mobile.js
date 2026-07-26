@@ -680,7 +680,8 @@
          王族可帶到 7 隻時要滑很久。這裡用 flex 重排壓成兩行：第1行 名字·Lv＋💾切換鈕、第2行 HP／MP 並排、EXP 隱藏(升級照常，只是不顯示進度條)，
          高度砍到約 1/3，一頁可看到 ~6 隻。只 scope 手機隊伍視圖，桌機與其他手機視圖 100% 不動。
          用 :has() 定位 HP/MP/EXP 列(2026 手機瀏覽器普遍支援)；倒地卡自然變「名字＋復活鈕｜切換鈕」一行，同樣受惠。 */
-      'body.m-mobile.mview-config #squad-tab-team > div{display:flex !important;flex-flow:row wrap;align-items:center;gap:3px 8px;padding:6px 9px !important;}',
+      /* ⚠ 只 scope 傭兵卡(活著/倒地都有 squad-* id)；寵物卡/召喚卡無 squad- id、結構不同(.compact-team-bar 靠 block 排版)，若被這條強制 flex 會讓 HP/MP 條縮成 0 寬看不到 → 用 :has([id^="squad-"]) 排除它們。 */
+      'body.m-mobile.mview-config #squad-tab-team > div:has([id^="squad-"]){display:flex !important;flex-flow:row wrap;align-items:center;gap:3px 8px;padding:6px 9px !important;}',
       'body.m-mobile.mview-config #squad-tab-team > div > div:first-child{order:0;flex:1 1 auto;min-width:0;}',                     /* 名字/Lv 列(倒地卡=名字+復活鈕列)→ 第1行左 */
       'body.m-mobile.mview-config #squad-tab-team > div > button{order:1;flex:0 0 auto;margin:0 !important;padding:3px 10px !important;font-size:11px !important;}',   /* 切換鈕 → 第1行右 */
       'body.m-mobile.mview-config #squad-tab-team > div > div[id^="squad-status-"]{order:2;flex:1 1 100%;}',                        /* 異常狀態小字(無狀態時空白·不佔高) → 獨立一行 */
