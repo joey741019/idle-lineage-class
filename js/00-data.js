@@ -2237,8 +2237,7 @@ const DB = {
                 { id: "npc_kent_guard", n: "肯特守衛隊長", title: "城堡護衛", type: "castleguard", d: "肯特守衛隊長以盾為誓，雇用守衛替你承擔 10% 一般攻擊傷害（HP 低於設定門檻時發動）。" },
                 { id: "npc_esti", n: "依詩蒂", title: "血盟", type: "pledge", d: "依詩蒂低聲訴說著血盟的古老誓言，為你尋找以血為盟的夥伴。" },
                 { id: "npc_tros", n: "特羅斯", title: "血盟", type: "pledge", d: "特羅斯握劍而立，為你尋找以血為盟的夥伴。" },
-                { id: "npc_obel", n: "奧貝勒", title: "魔物追蹤", type: "exchange", d: "奧貝勒是追蹤魔物的老手，消耗王族搜索狀，追蹤指定地區的特定魔物。" },
-                { id: "npc_baowu", n: "包武", title: "寵物保管", type: "petstore", d: "和善的看護人包武，願替遠行的旅人照看愛犬。替你保管寵物（最多 40 隻，同一模式的角色共通）。使用回憶蠟燭不會清除保管中的寵物。" }
+                { id: "npc_obel", n: "奧貝勒", title: "魔物追蹤", type: "exchange", d: "奧貝勒是追蹤魔物的老手，消耗王族搜索狀，追蹤指定地區的特定魔物。" }
             ]
         },
         "town_windwood_castle": {
@@ -2262,8 +2261,7 @@ const DB = {
                 { id: "npc_heine_guard", n: "海音神官隊長", title: "城堡治療", type: "castleguard", d: "海音神官隊長以聖光庇佑同袍，雇用神官在你 HP 低於設定門檻時，每 5 秒為你施放治癒術。" },
                 { id: "npc_esti", n: "依詩蒂", title: "血盟", type: "pledge", d: "依詩蒂低聲訴說著血盟的古老誓言，為你尋找以血為盟的夥伴。" },
                 { id: "npc_tros", n: "特羅斯", title: "血盟", type: "pledge", d: "特羅斯握劍而立，為你尋找以血為盟的夥伴。" },
-                { id: "npc_diren", n: "帝倫", title: "魔物追蹤", type: "exchange", d: "帝倫熟知各地魔物的蹤跡，消耗王族搜索狀，追蹤指定地區的特定魔物。" },
-                { id: "npc_baowu", n: "包武", title: "寵物保管", type: "petstore", d: "和善的看護人包武，願替遠行的旅人照看愛犬。替你保管寵物（最多 40 隻，同一模式的角色共通）。使用回憶蠟燭不會清除保管中的寵物。" }
+                { id: "npc_diren", n: "帝倫", title: "魔物追蹤", type: "exchange", d: "帝倫熟知各地魔物的蹤跡，消耗王族搜索狀，追蹤指定地區的特定魔物。" }
             ]
         },
         "town_talking": {
