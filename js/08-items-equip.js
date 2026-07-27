@@ -1064,13 +1064,22 @@ function renderStatusEffects() {
 
     // 🔍 魔物追蹤（奧貝勒·8 小時）：原本只有回奧貝勒問才看得到剩餘時間 → 直接顯示在狀態列
     //    追蹤是牆鐘計時（關遊戲也會流逝），故用 Date.now() 算剩餘
+    let _trackHtml = '';   // 桌機另外鏡射到「冒險地圖」標題後（#map-track）；空＝無追蹤
     { let _tr = player.tracking;
       if (_tr && _tr.until > Date.now()) {
           let _left = _tr.until - Date.now();
           let _h = Math.floor(_left / 3600000), _m = Math.floor((_left % 3600000) / 60000);
           let _mn = (DB.mobs[_tr.mob] || {}).n || _tr.mob;
           let _here = (_tr.map === mapState.current);   // 不在追蹤的那張圖 → 標灰提醒（此圖不會提高出現率）
-          buffs.push(`<span class="${_here ? 'text-cyan-300' : 'text-slate-500'} font-bold" title="${_here ? '追蹤中：此圖該怪出現率提高' : '追蹤的地圖不是這裡（要到 ' + ((typeof AFK_EXTRA !== 'undefined' && AFK_EXTRA.mapName) ? AFK_EXTRA.mapName(_tr.map) : _tr.map) + ' 才生效）'}">🔍 追蹤:${_mn} ${_h > 0 ? _h + '時' : ''}${_m}分</span>`);
+          _trackHtml = `<span class="${_here ? 'text-cyan-300' : 'text-slate-500'} font-bold" title="${_here ? '追蹤中：此圖該怪出現率提高' : '追蹤的地圖不是這裡（要到 ' + ((typeof AFK_EXTRA !== 'undefined' && AFK_EXTRA.mapName) ? AFK_EXTRA.mapName(_tr.map) : _tr.map) + ' 才生效）'}">🔍 追蹤:${_mn} ${_h > 0 ? _h + '時' : ''}${_m}分</span>`;
+          buffs.push(_trackHtml);
+      } }
+    // 🖥️ 桌機：把同一段追蹤資訊也顯示在「冒險地圖」標題後（#map-track），顯示方式比照「狀態」。
+    //    手機：afk-mobile 已移除標題文字，故一律清空隱藏（m-mobile 時不填）→ 手機版面不變。
+    { let _mt = document.getElementById('map-track');
+      if (_mt) {
+          if (_trackHtml && !document.body.classList.contains('m-mobile')) { _mt.style.display = ''; _mt.innerHTML = _trackHtml; }
+          else { _mt.style.display = 'none'; _mt.innerHTML = ''; }
       } }
 
     // 🔮 席琳套裝：達 2 件以上（觸發套裝能力）的組別顯示於資訊面板（n/5）
