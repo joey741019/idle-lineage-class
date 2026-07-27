@@ -231,16 +231,6 @@ function petRoster() {
             delete p.out;
             p.eqV = p.eqV || 0; p.outV = p.outV || 0;   // 🕐 版本戳（舊桶無→0；首次變更才蓋章）
         });
-        // 🍶 喝水閥值 hydrate：真相來源＝ fb5_pet_potcfg（依 uid·全域共用）。命中→覆蓋 p.potPct；
-        //    未命中但桶內有舊 potPct(>0)→一次性遷移進設定檔（之後 _petPersist 不再序列化 potPct）。
-        { let _pc = _petPotCfgLoad(), _pcDirty = false;
-          _petRoster.forEach(p => {
-              let _v = _pc.pots[p.uid];
-              if (typeof _v === 'number') p.potPct = _petPotClamp(_v);
-              else if (p.potPct > 0) { _pc.pots[p.uid] = _petPotClamp(p.potPct); p.potPct = _pc.pots[p.uid]; _pcDirty = true; }
-              else p.potPct = 0;
-          });
-          if (_pcDirty) _petPotCfgSaveObj(_pc); }
         _petRosterKey = key;
         _petEnforceCarry();
     }
@@ -289,7 +279,7 @@ function _petMergeFromBucket(cur, key) {
         }
         // 其他角色出戰中的寵物，以共用桶為即時狀態來源；本角色不可用過期鏡像覆蓋其 HP/MP/等級。
         if (_petOutStateKey(p) && _petOutStateKey(p) !== _petCurrentOwnerKey() && _petOutStateKey(f) === _petOutStateKey(p) && _fOutV === (Number(p.outV) || 0)) {
-            for (let k of ['form','lv','exp','expReqV','mhp','mmp','hp','mp','name','locked']) if (f[k] !== undefined) p[k] = f[k];   // 🍶 potPct 移除：改由 fb5_pet_potcfg 依 uid hydrate（非出戰狀態同步欄位）
+            for (let k of ['form','lv','exp','expReqV','mhp','mmp','hp','mp','potPct','name','locked']) if (f[k] !== undefined) p[k] = f[k];
         }
     });
     return tombs;
@@ -322,28 +312,8 @@ function _petTombsRead(key) {   // 🪦 放生墓碑桶（key_rm）：{uid:1}·�
 function _petTombsWrite(key, tombs) {   // 只留最近 300 筆（uid 不重複使用·舊墓碑可安全淘汰）
     try { let ks = Object.keys(tombs); if (ks.length > 300) ks.slice(0, ks.length - 300).forEach(k => delete tombs[k]); _lzSet(key + '_rm', _saveWrap(JSON.stringify(tombs))); } catch (e) {}
 }
-// 🍶 寵物喝水閥值獨立設定檔 fb5_pet_potcfg（依寵物 uid·全域共用：跨角色/跨模式同一份；只壓縮不簽章·不匯出）
-//   結構：{ v:1, pots:{ "<uid>": <0~95 int> } }。真相來源＝此檔：讀 roster 時 hydrate 回 p.potPct；petSetPotPct write-through。
-//   ⚠ 刻意不進寵物桶（_petPersist 不序列化 potPct）→ 匯出/匯入對它隱形；放生（uid 不重用）時刪其孤兒條目。
-const PET_POTCFG_KEY = 'fb5_pet_potcfg';
-function _petPotClamp(v) { return Math.max(0, Math.min(95, parseInt(v, 10) || 0)); }
-function _petPotCfgLoad() {
-    try {
-        let raw = _lzGet(PET_POTCFG_KEY);
-        if (!raw) return { v: 1, pots: {} };
-        let o = JSON.parse(raw);
-        if (!o || typeof o !== 'object') return { v: 1, pots: {} };
-        if (!o.pots || typeof o.pots !== 'object') o.pots = {};
-        return o;
-    } catch (e) { return { v: 1, pots: {} }; }
-}
-function _petPotCfgSaveObj(o) { try { o.v = 1; _lzSet(PET_POTCFG_KEY, JSON.stringify(o)); } catch (e) {} }
-function petPotCfgGet(uidv) { if (!uidv) return undefined; let v = _petPotCfgLoad().pots[uidv]; return (typeof v === 'number') ? v : undefined; }
-function petPotCfgSet(uidv, val) { if (!uidv) return; let o = _petPotCfgLoad(); o.pots[uidv] = _petPotClamp(val); _petPotCfgSaveObj(o); }
-function petPotCfgDelete(uidv) { if (!uidv) return; let o = _petPotCfgLoad(); if (o.pots[uidv] !== undefined) { delete o.pots[uidv]; _petPotCfgSaveObj(o); } }
-
-function _petPersist(p) {   // 只序列化長生欄位（戰鬥暫存 _ 前綴不入桶；potPct 改存 fb5_pet_potcfg·不入桶不匯出）
-    let o = { uid: p.uid, form: p.form, lv: p.lv, exp: p.exp, expReqV: p.expReqV || PET_EXP_REQ_VERSION, mhp: p.mhp, mmp: p.mmp, hp: p.hp, mp: p.mp, outOwner: p.outOwner ? String(p.outOwner) : null, outSlot: p.outSlot == null ? null : String(p.outSlot), outV: p.outV || 0, eqV: p.eqV || 0, name: p.name || '', locked: !!p.locked };
+function _petPersist(p) {   // 只序列化長生欄位（戰鬥暫存 _ 前綴不入桶）
+    let o = { uid: p.uid, form: p.form, lv: p.lv, exp: p.exp, expReqV: p.expReqV || PET_EXP_REQ_VERSION, mhp: p.mhp, mmp: p.mmp, hp: p.hp, mp: p.mp, outOwner: p.outOwner ? String(p.outOwner) : null, outSlot: p.outSlot == null ? null : String(p.outSlot), outV: p.outV || 0, eqV: p.eqV || 0, potPct: p.potPct || 0, name: p.name || '', locked: !!p.locked };
     if (p.eq && (p.eq.wpn || p.eq.arm)) {   // 🦴 v3.2.39 稽核修：個別裝備隨寵物入桶（漏存＝重載後裝備蒸發）；v3.2.40 改 _petGearPack 保留祝福/屬性/鎖定
         o.eq = {};
         for (let k of ['wpn', 'arm']) { let g = p.eq[k]; if (g && g.id) o.eq[k] = _petGearPack(g); }
@@ -550,7 +520,6 @@ function petReleaseConfirm(uidv, yes) {
     petMarkDirty();
     if (!_petCommitMutation(snap)) { if (_d) renderPetStorageNPC(_d); return; }
     _petReleasedUids[uidv] = true;   // 墓碑於成功後才標記（失敗回滾時寵物須能寫回桶）·補寫一次讓 _rm 立即持久化
-    try { petPotCfgDelete(uidv); } catch (e) {}   // 🍶 放生後清喝水設定孤兒條目（uid 不重用→永不回來）
     try { petRosterSave(); } catch (e) {}
     if (_gearBack.length) {
         logSys(`<span class="text-amber-200">牠身上的 ${_gearBack.map(g => (DB.items[g.id] ? DB.items[g.id].n : g.id) + ((g.en || 0) > 0 ? '+' + g.en : '')).join('、')} 已放回你的背包。</span>`);
@@ -629,7 +598,7 @@ function petEvoChoose(p, avail) {   // 🐉 v3.2.63 兩種果實都有時的進�
     document.body.appendChild(ov);
 }
 function petDisplayName(p) { return (p.name ? p.name + '（' + p.form + '）' : p.form); }
-function petSetPotPct(uidv, v) { let p = _petFindFresh(uidv); if (!p || _petRejectForeignMutation(p)) return; p.potPct = _petPotClamp(v); petPotCfgSet(uidv, p.potPct); petMarkDirty(); }   // 🍶 write-through 獨立設定檔 fb5_pet_potcfg（依 uid·不入桶不匯出）
+function petSetPotPct(uidv, v) { let p = _petFindFresh(uidv); if (!p || _petRejectForeignMutation(p)) return; p.potPct = Math.max(0, Math.min(95, parseInt(v, 10) || 0)); petMarkDirty(); }
 
 // ---------- 五之二、寵物個別裝備（v3.2.37：武器 slot:petwpn／防具 slot:petarm·裝備存在寵物身上 p.eq={wpn,arm}·共用桶隨寵物走）----------
 const PET_GEAR_SLOT = { wpn: { slot: 'petwpn', n: '寵物武器' }, arm: { slot: 'petarm', n: '寵物防具' } };
