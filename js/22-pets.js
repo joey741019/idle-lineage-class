@@ -1064,8 +1064,16 @@ function _petOutOwnerLabel(ownerKey, cache) {
     return label;
 }
 function renderPetStorageNPC(div, confirmUid) {
-    // 🐾 顯示層排序：等級高→低（副本排序·不動 live _petRoster）；同級用 uid 穩定排序避免抖動。身份/出戰/存檔全走 uid+outSlot，改順序無副作用。
-    let list = petRoster().slice().sort((a, b) => (b.lv || 1) - (a.lv || 1) || (a.uid < b.uid ? -1 : a.uid > b.uid ? 1 : 0));
+    // 🐾 顯示層排序（副本排序·不動 live _petRoster）：① 等級高→低 ② 寵物類型(依 PET_BOOK 定義序·同收藏冊順序) ③ HP(最大 mhp)高→低 ④ MP(最大 mmp)高→低；末尾用 uid 穩定排序避免抖動。身份/出戰/存檔全走 uid+outSlot，改順序無副作用。
+    let _petTypeIdx = {}; Object.keys(PET_BOOK).forEach((k, i) => { _petTypeIdx[k] = i; });
+    let _petTi = p => (_petTypeIdx[p.form] != null ? _petTypeIdx[p.form] : 9999);
+    let list = petRoster().slice().sort((a, b) =>
+        (b.lv || 1) - (a.lv || 1)                              // ① 等級 高→低
+        || _petTi(a) - _petTi(b)                               // ② 寵物類型（PET_BOOK 順序）
+        || (b.mhp || 0) - (a.mhp || 0)                         // ③ HP（最大）高→低
+        || (b.mmp || 0) - (a.mmp || 0)                         // ④ MP（最大）高→低
+        || (a.uid < b.uid ? -1 : a.uid > b.uid ? 1 : 0));      // 穩定 tiebreak
+
     let cha = (player.d && player.d.cha) || 0;
     let _ownerCache = {};
     let rows = list.map(p => {
