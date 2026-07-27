@@ -1162,13 +1162,21 @@ function _updateUIImpl() {
       // 📱 手機常駐快捷鍵：與桌機按鈕同步（藍＝出發、綠＝回村/回城、紫＝撤離）
       let mb = document.getElementById('mv-action-btn');
       if (mb) { mb.style.display = ''; mb.textContent = _txt; mb.onclick = _fn; mb.style.background = _riftLock ? '#7c3aed' : (_inTown ? '#1d4ed8' : '#047857'); mb.style.borderColor = _riftLock ? '#c4b5fd' : (_inTown ? '#93c5fd' : '#34d399'); }
-      // 🏰 攻城獲勝：獨立「回城」按鈕（村莊＋狩獵常駐；已在該城堡／裂痕／受控鎖定區隱藏）。狀態改變才寫 DOM，避免每幀閃爍。
+      // 🏰 攻城獲勝：獨立「回城/回村」按鈕（攻城獲勝期間村莊＋狩獵＋城堡皆常駐；裂痕/受控鎖定區隱藏）。
+      //    不在城堡→「回城」(→獲勝城堡)；已在城堡→改「回村」(→村莊·returnToTown 走 getLastTown 已排除城堡)。狀態改變才寫 class，避免閃爍。
       { let cb = document.getElementById('btn-return-castle');
         if (cb) {
-          let _showCastle = !!(siegeVictoryActive() && !_riftLock && mapState.current !== victoryCityCfg().castle
+          let _atCastle = !!(siegeVictoryActive() && mapState.current === victoryCityCfg().castle);
+          let _showCastle = !!(siegeVictoryActive() && !_riftLock
               && !KING_ROOMS[mapState.current] && !(typeof prideTeleportBlocked === 'function' && prideTeleportBlocked()) && !state.oblivion);
           if (cb.classList.contains('hidden') !== !_showCastle) { cb.classList.toggle('hidden', !_showCastle); cb.style.display = _showCastle ? '' : 'none'; }
-          cb.onclick = returnToCastle;
+          if (_showCastle) {
+            cb.textContent = _atCastle ? '回村' : '回城';
+            cb.onclick = _atCastle ? returnToTown : returnToCastle;
+            cb.title = _atCastle ? '離開城堡，回到村莊' : '攻城獲勝期間：一鍵回到你攻下的城堡';
+            cb.style.background = _atCastle ? '#065f46' : '';   // 回村＝綠（同回村鈕色系）；回城＝沿用 HTML 琥珀
+            cb.style.borderColor = _atCastle ? '#34d399' : '';
+          }
         } }
       // 🌀 順移按鈕：固定顯示（含村莊/野外/狩獵/隱藏區域），不隨敵人或每幀重繪閃爍；僅在「傳送會破壞玩法」的鎖定模式隱藏（裂痕/傲慢之塔封鎖樓/遺忘之島/軍王之室）。
       // ⚠️ 用「狀態改變才寫 DOM」的守衛：避免每個 tick 重複 toggle class / 設 display 造成按鈕閃爍。

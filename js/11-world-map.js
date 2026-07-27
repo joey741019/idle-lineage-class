@@ -1318,7 +1318,7 @@ function changeMap(force) {
         let tData = DB.towns[mapState.current];
         let tName = tData ? tData.n : document.getElementById('map-select').options[document.getElementById('map-select').selectedIndex].text;
         document.getElementById('town-name').innerText = tName;
-        player.lastTownVisited = mapState.current;   // 🏘️ v3.0.94 記錄最後待過的安全區（「回村」按鈕改回此處·隨存檔持久）
+        if (!Object.values(SIEGE_CITY).some(c => c && c.castle === mapState.current)) player.lastTownVisited = mapState.current;   // 🏘️ v3.0.94 記錄最後待過的安全區（「回村」按鈕改回此處·隨存檔持久）；🏰 排除城堡→「回村」永遠回村莊（城堡由「回城」負責），在城堡點回村才不會原地打轉
 
         // 瞬間恢復所有 HP 與 MP
         player.hp = player.mhp;
