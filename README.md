@@ -27,7 +27,7 @@
 
 - **測試站**：https://joey741019.github.io/idle-lineage-class/dev/ （正式站在 `/`、開發站在 `/dev`）
 - 每個新功能／調整都會開一個對應的 **[Issue](https://github.com/joey741019/idle-lineage-class/issues)**，公開給大家**討論、投票、給意見**。
-- 一個 Issue 提出後，**滿一個月沒有反對意見**，就會併入正式站（隨下一次 [Release](https://github.com/joey741019/idle-lineage-class/releases) 上線）。
+- 一個 Issue 提出後會**開放討論約一個月**，充分聽取大家的意見後，再併入正式站（隨下一次 [Release](https://github.com/joey741019/idle-lineage-class/releases) 上線）。
 - 有想法、發現問題、或想對某個功能表態，歡迎到 [Issues](https://github.com/joey741019/idle-lineage-class/issues) 留言。你的意見會直接影響正式站要不要採用。
 
 ## 關於存檔
