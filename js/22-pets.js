@@ -1063,16 +1063,22 @@ function _petOutOwnerLabel(ownerKey, cache) {
     cache[k] = label;
     return label;
 }
+// 🐾 寵物清單統一排序（保管清單＋出戰隊伍面板共用）：① 已進化(tier>0)在前 ② 等級高→低 ③ 類型(PET_BOOK 定義序·收藏冊序) ④ HP(最大 mhp)高→低 ⑤ MP(最大 mmp)高→低 ⑥ uid 穩定。純顯示層、對副本排序，不動 _petRoster／出戰歸屬。
+const _PET_TYPE_IDX = (() => { let m = {}; Object.keys(PET_BOOK).forEach((k, i) => { m[k] = i; }); return m; })();
+function _petEvolved(p) { let d = PET_BOOK[p.form]; return !!(d && (d.tier || 0) > 0); }   // 進化＝高等型態(tier1)或黃金龍(tier2)
+function _petTypeOrd(p) { return _PET_TYPE_IDX[p.form] != null ? _PET_TYPE_IDX[p.form] : 9999; }
+function petListCmp(a, b) {
+    return ((_petEvolved(b) ? 1 : 0) - (_petEvolved(a) ? 1 : 0))   // ① 已進化在前（二分：進化 vs 一般）
+        || (b.lv || 1) - (a.lv || 1)                                // ② 等級 高→低
+        || _petTypeOrd(a) - _petTypeOrd(b)                          // ③ 類型（PET_BOOK 定義序）
+        || (b.mhp || 0) - (a.mhp || 0)                              // ④ HP（最大 mhp）高→低
+        || (b.mmp || 0) - (a.mmp || 0)                              // ⑤ MP（最大 mmp）高→低
+        || (a.uid < b.uid ? -1 : a.uid > b.uid ? 1 : 0);           // ⑥ uid 穩定 tiebreak
+}
+
 function renderPetStorageNPC(div, confirmUid) {
-    // 🐾 顯示層排序（副本排序·不動 live _petRoster）：① 等級高→低 ② 寵物類型(依 PET_BOOK 定義序·同收藏冊順序) ③ HP(最大 mhp)高→低 ④ MP(最大 mmp)高→低；末尾用 uid 穩定排序避免抖動。身份/出戰/存檔全走 uid+outSlot，改順序無副作用。
-    let _petTypeIdx = {}; Object.keys(PET_BOOK).forEach((k, i) => { _petTypeIdx[k] = i; });
-    let _petTi = p => (_petTypeIdx[p.form] != null ? _petTypeIdx[p.form] : 9999);
-    let list = petRoster().slice().sort((a, b) =>
-        (b.lv || 1) - (a.lv || 1)                              // ① 等級 高→低
-        || _petTi(a) - _petTi(b)                               // ② 寵物類型（PET_BOOK 順序）
-        || (b.mhp || 0) - (a.mhp || 0)                         // ③ HP（最大）高→低
-        || (b.mmp || 0) - (a.mmp || 0)                         // ④ MP（最大）高→低
-        || (a.uid < b.uid ? -1 : a.uid > b.uid ? 1 : 0));      // 穩定 tiebreak
+    // 🐾 顯示層排序（副本·不動 live _petRoster）：見 petListCmp。身份/出戰/存檔全走 uid+outSlot，改順序無副作用。
+    let list = petRoster().slice().sort(petListCmp);
 
     let cha = (player.d && player.d.cha) || 0;
     let _ownerCache = {};
@@ -1139,7 +1145,7 @@ function renderPetStorageNPC(div, confirmUid) {
 
 // ---------- 九、隊伍清單（renderSquadPanel 掛點：傭兵卡下方）----------
 function renderPetTeamHTML() {
-    let outs = petsOutList();
+    let outs = petsOutList().slice().sort(petListCmp);   // 🐾 出戰隊伍面板套用與保管清單相同排序（副本·不動出戰歸屬）
     if (!outs.length) return '';
     return outs.map(p => {
         let _mmpEff = p.mmp + (((typeof petDerive === 'function' && petDerive(p)) || {}).mmpBonus || 0);   // 🦴 v3.2.42 稽核修：MP 條/浮標含防具精神加成（原本米索莉寵顯示 35/30 爆表）
