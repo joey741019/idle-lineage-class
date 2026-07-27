@@ -21,6 +21,15 @@
 
 - **📚 小百科** — 首頁入口，把職業專精、武器特性、職業魔法、任務、套裝、強化、負重、席琳的世界、血盟、傲慢之塔共十個主題整理成查詢頁，還能用關鍵字一次搜尋（例：出血、套裝、屠龍劍），不用自己土法煉鋼。同樣可以用 ↗ 開成獨立分頁。
 
+## 🧪 開發中版本與意見徵集（dev）
+
+新功能和較大的調整，會**先做在 `dev` 分支**、放到測試站，不會直接進正式站：
+
+- **測試站**：https://joey741019.github.io/idle-lineage-class/dev/ （正式站在 `/`、開發站在 `/dev`）
+- 每個新功能／調整都會開一個對應的 **[Issue](https://github.com/joey741019/idle-lineage-class/issues)**，公開給大家**討論、投票、給意見**。
+- 一個 Issue 提出後，**滿一個月沒有反對意見**，就會併入正式站（隨下一次 [Release](https://github.com/joey741019/idle-lineage-class/releases) 上線）。
+- 有想法、發現問題、或想對某個功能表態，歡迎到 [Issues](https://github.com/joey741019/idle-lineage-class/issues) 留言。你的意見會直接影響正式站要不要採用。
+
 ## 關於存檔
 
 進度是存在「你目前用的這個瀏覽器」裡的。換瀏覽器、換裝置，或本機開的檔案版與網路版，都是**各自獨立的存檔**。要把進度帶過去，請用遊戲內建的「存檔匯出 / 匯入」功能（主選單與「設定」頁都有入口）。
@@ -31,6 +40,6 @@
 
 - **遊戲本體**：由 **巴哈姆特 秋玥** 製作 — 原版：https://shines871.github.io/idle-lineage-class/
 - **加掛版**：由 **peter（301 的 C 大）** 在原作之上加掛離線掛機、小百科、掉落查詢、手機版面等功能 — 加掛版原站：https://pp771007.github.io/idle-lineage-class/
-- **本站**：以 **peter（301 的 C 大）的加掛版 v3.4.12** 為基礎的分支，版號從 **v1.0.0** 起獨立起算（伺服器永久開放）。加掛版有自己的版本號（首頁可看到「加掛版 vX.Y.Z」），每次更新內容見 [Releases](https://github.com/joey741019/idle-lineage-class/releases)。
+- **本站**：以 **peter（301 的 C 大）的加掛版 v3.4.12** 為基礎的衍生版，版號從 **v1.0.0** 起獨立起算（伺服器永久開放）。加掛衍生版有自己的版本號（首頁可看到「加掛衍生版 vX.Y.Z」），每次更新內容見 [Releases](https://github.com/joey741019/idle-lineage-class/releases)。
 
 - 巴哈討論串：https://forum.gamer.com.tw/C.php?page=1&bsn=84452&snA=8362&tnum=273
