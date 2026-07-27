@@ -1153,7 +1153,7 @@ function _updateUIImpl() {
     try { renderSyslogPandora(); } catch (e) {}   // 🔧 系統日誌標題列右側：黑市拍賣中商品
     document.getElementById('st-lv').innerText = player.lv;
     { let _inTown = mapState.current.startsWith('town_');   // 🔧 村莊→藍色「出發」一鍵回上一張戰鬥地圖；戰鬥地圖→綠色回村/回城
-      let _txt = _inTown ? '出發' : (siegeVictoryActive() ? '回城' : '回村');
+      let _txt = _inTown ? '出發' : '回村';   // 🏰 「回城」已獨立成 btn-return-castle，此情境鈕不再兼回城
       let _fn  = _inTown ? departToLastBattle : returnToTown;
       let _riftLock = (state.riftRun && mapState.current === 'rift_battle');   // 🌀 裂痕內：回村/出發 → 紫色「撤離」（主動結算，照樣記時間＋發獎勵；不可一般回村/傳送）
       if (_riftLock) { _txt = '撤離'; _fn = riftEvacuate; }
@@ -1162,6 +1162,14 @@ function _updateUIImpl() {
       // 📱 手機常駐快捷鍵：與桌機按鈕同步（藍＝出發、綠＝回村/回城、紫＝撤離）
       let mb = document.getElementById('mv-action-btn');
       if (mb) { mb.style.display = ''; mb.textContent = _txt; mb.onclick = _fn; mb.style.background = _riftLock ? '#7c3aed' : (_inTown ? '#1d4ed8' : '#047857'); mb.style.borderColor = _riftLock ? '#c4b5fd' : (_inTown ? '#93c5fd' : '#34d399'); }
+      // 🏰 攻城獲勝：獨立「回城」按鈕（村莊＋狩獵常駐；已在該城堡／裂痕／受控鎖定區隱藏）。狀態改變才寫 DOM，避免每幀閃爍。
+      { let cb = document.getElementById('btn-return-castle');
+        if (cb) {
+          let _showCastle = !!(siegeVictoryActive() && !_riftLock && mapState.current !== victoryCityCfg().castle
+              && !KING_ROOMS[mapState.current] && !(typeof prideTeleportBlocked === 'function' && prideTeleportBlocked()) && !state.oblivion);
+          if (cb.classList.contains('hidden') !== !_showCastle) { cb.classList.toggle('hidden', !_showCastle); cb.style.display = _showCastle ? '' : 'none'; }
+          cb.onclick = returnToCastle;
+        } }
       // 🌀 順移按鈕：固定顯示（含村莊/野外/狩獵/隱藏區域），不隨敵人或每幀重繪閃爍；僅在「傳送會破壞玩法」的鎖定模式隱藏（裂痕/傲慢之塔封鎖樓/遺忘之島/軍王之室）。
       // ⚠️ 用「狀態改變才寫 DOM」的守衛：避免每個 tick 重複 toggle class / 設 display 造成按鈕閃爍。
       { let tpb = document.getElementById('btn-teleport'); if (tpb) { let _hideTp = !!(KING_ROOMS[mapState.current] || (typeof prideTeleportBlocked === 'function' && prideTeleportBlocked()) || state.oblivion); if (tpb.classList.contains('hidden') !== _hideTp) { tpb.classList.toggle('hidden', _hideTp); tpb.style.display = _hideTp ? 'none' : ''; } } } }   // ⚠️ _hideTp 必須 !! 強轉布林：否則 (undefined||false||undefined)===undefined → 守衛 (boolean!==undefined) 恆真 → toggle('hidden', undefined) 變成「無參數 bare toggle」每幀翻轉 → 按鈕閃爍

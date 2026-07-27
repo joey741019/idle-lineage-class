@@ -555,9 +555,23 @@ function returnToTown() {
     }
     let _wasKingRoom = !!KING_ROOMS[mapState.current];   // 🔧 記住離開前是否在軍王之室
     if (state.oblivion) { state.oblivion = null; state._oblivionAdvance = false; }   // 🏝️ 回村即結束遺忘之島旅程
-    setMapSelectors(siegeVictoryActive() ? victoryCityCfg().castle : getLastTown());   // 攻城獲勝 24h：回城＝獲勝城池；🏘️ v3.0.94 否則回「上一個待過的安全區」（無紀錄→家鄉）
+    setMapSelectors(getLastTown());   // 🏘️ 回村＝回「上一個待過的安全區」（無紀錄→家鄉）；攻城獲勝的「回城」已獨立成 btn-return-castle／returnToCastle，不再由回村兼任
     changeMap();   // 走既有切換流程（進入村莊：補滿 HP/MP、清狀態、渲染 NPC）
     // 🔧 自軍王之室手動回城／回村：同樣將「特殊」記憶位置改為新兵修練場（避免下次自動回到需鑰匙的軍王之室）
+    if (_wasKingRoom) { if (!player.lastMapByCat) player.lastMapByCat = {}; player.lastMapByCat.special = 'training'; saveGame(); }
+}
+// 🏰 攻城獲勝「回城」：一鍵回到攻下的城堡（獨立於回村；村莊＋狩獵皆可用）。受控狀態／裂痕不可用。
+function returnToCastle() {
+    if (!siegeVictoryActive()) return;   // 非攻城獲勝狀態無城堡
+    if (state.riftRun && mapState.current === 'rift_battle') { logSys('<span class="text-violet-300">扭曲的時空緊緊纏繞著你，無法回城——唯有戰死方能離開時空裂痕。</span>'); return; }
+    if (player.statuses && (player.statuses.stone > 0 || player.statuses.paralyze > 0 || player.statuses.freeze > 0 || player.statuses.stun > 0 || player.statuses.sleep > 0)) {
+        logSys('你目前無法行動（石化／麻痺／冰凍／暈眩），無法回城。');
+        return;
+    }
+    let _wasKingRoom = !!KING_ROOMS[mapState.current];
+    if (state.oblivion) { state.oblivion = null; state._oblivionAdvance = false; }
+    setMapSelectors(victoryCityCfg().castle);
+    changeMap();
     if (_wasKingRoom) { if (!player.lastMapByCat) player.lastMapByCat = {}; player.lastMapByCat.special = 'training'; saveGame(); }
 }
 // ===== ⌨️ 鍵盤快捷鍵（v3.1.13）=====
