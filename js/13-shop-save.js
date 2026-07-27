@@ -931,6 +931,21 @@ function whSaveBlocked() { return _saveBroken; }
     document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') saveOnExit(); });
 })();
 
+// 🏺 遠古(anc)詞綴一次性清除：碧恩已改 2 路（屬性/祝福）不再產生遠古；此處把「既有」裝備的 anc 一律清為 false。
+//   掃：背包/裝備/傭兵(eq+inv)/血盟待贖回/共用倉庫/寵物裝備。每次載入冪等執行（比照 _normAttr/_fixSet 樣板）。
+//   ⚠ 遠古的顯示/加成程式碼保留不刪（無裝備會帶 anc→留著無害）；清除＝既有遠古裝備失去該加成（使用者拍板接受）。
+function stripAllAncAffixes() {
+    try {
+        let _strip = (it) => { if (it && it.anc) it.anc = false; };
+        if (Array.isArray(player.inv)) player.inv.forEach(_strip);
+        if (player.eq) for (let k in player.eq) _strip(player.eq[k]);
+        (player.allies || []).forEach(a => { if (a && a.eq) { for (let k in a.eq) _strip(a.eq[k]); } if (a && Array.isArray(a.inv)) a.inv.forEach(_strip); });
+        if (Array.isArray(player.pvpLostItems)) player.pvpLostItems.forEach(r => { if (r && r.item) _strip(r.item); });
+        try { let _w = loadWarehouse(); let _chg = false; _w.items.forEach(it => { if (it && it.anc) { it.anc = false; _chg = true; } }); if (_chg) saveWarehouse(_w); } catch (e) {}   // 共用倉庫桶
+        try { if (typeof petRoster === 'function') { let _pd = false; petRoster().forEach(p => { if (p && p.eq) { for (let k of ['wpn', 'arm']) { if (p.eq[k] && p.eq[k].anc) { p.eq[k].anc = false; _pd = true; } } } }); if (_pd) { if (typeof petMarkDirty === 'function') petMarkDirty(); try { if (typeof petRosterSave === 'function') petRosterSave(); } catch (e) {} } } } catch (e) {}   // 寵物裝備（共用名冊桶）
+    } catch (e) { console.warn('stripAllAncAffixes', e); }
+}
+
 // 合併同一性物品堆疊（相容舊存檔：修復前被拆分的相同卷軸/物品會重新合併）。
 // 僅合併未強化(en===0)的物品；強化品(+N)維持獨立。鎖定不列入同一性比對（與 gainItem 一致），
 // 但合併後只要其中任一原堆疊為鎖定，即保留鎖定狀態（保護不被誤賣；鎖定仍可用於強化）。
@@ -1045,6 +1060,7 @@ function loadGame() {
             (player.allies || []).forEach(a => { if (a && a.eq) { for (let k in a.eq) _fixSet(a.eq[k]); } if (a && a.inv) a.inv.forEach(_fixSet); });
             try { let _w = loadWarehouse(); let _chg = false; _w.items.forEach(it => { if (it && it.seteff) { let dd = DB.items[it.id]; if (dd && dd.slot === 'amulet') { it.seteff = false; _chg = true; } } }); if (_chg) saveWarehouse(_w); } catch (e) {}
         }
+        stripAllAncAffixes();   // 🏺 遠古(anc)詞綴一次性清除（碧恩改 2 路後不再產生；掃全部容器·冪等）
         consolidateInventory();   // 相容舊存檔：合併修復前被拆分的相同卷軸/物品堆疊
         purgeCompletedElfWhisper();   // 🔥 載入時：若已交付完成精靈的私語階段，自動清除身上殘留的精靈的私語
         if(!player.statuses) player.statuses = { stun: 0, freeze: 0, stone: 0, poison: 0, poisonDmg: 0, poisonTick: 0, burn: 0, burnDmg: 0, burnTick: 0, scald: 0, scaldDmg: 0, scaldTick: 0, bleed: 0, bleedDmg: 0, bleedTick: 0, sleep: 0, silence: 0, paralyze: 0 };

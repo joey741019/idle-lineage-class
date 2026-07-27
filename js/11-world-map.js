@@ -1142,7 +1142,7 @@ function renderKristaExchange(el) {
             </div>
         </div>`;
 }
-// ===== 碧恩：用賦予祝福卷軸為裝備隨機改變一個詞綴（屬性/遠古系/祝福，平均抽一） =====
+// ===== 碧恩：用賦予祝福卷軸為裝備隨機改變一個詞綴（屬性/祝福，平均抽一；🏺 遠古已移除·不再賦予） =====
 function doBianBless(slotKey) {
     let item = player.eq[slotKey];
     if (!item) { logSys('該欄位沒有裝備。'); return; }
@@ -1153,9 +1153,9 @@ function doBianBless(slotKey) {
     let sc = player.inv.find(i => i.id === scrollId);
     if (!sc || sc.cnt < 1) { logSys(`<span class="text-red-400">缺少 ${scrollNm}。</span>`); return; }
     sc.cnt--; if (sc.cnt <= 0) player.inv = player.inv.filter(i => i.uid !== sc.uid);
-    let pick = Math.floor(lootRng('bianpick') * 3);   // 🎲 committed RNG（防 SL 重抽碧恩賦予結果）
+    let pick = Math.floor(lootRng('bianpick') * 2);   // 🎲 committed RNG（防 SL 重抽碧恩賦予結果）；🏺 遠古移除：由「屬性/遠古/祝福」3 路改為「屬性/祝福」2 路
     let msg = '';
-    if (pick === 2) {
+    if (pick === 1) {
         let rolled = (lootRng('bianbless') < 0.5) ? true : 'cursed';   // 祝福的 / 詛咒的 各半
         let curB = item.bless || false;
         let curN = (curB === true) ? 'blessed' : (curB || false);
@@ -1163,14 +1163,6 @@ function doBianBless(slotKey) {
         if (!curB) { item.bless = rolled; msg = `附加了 <span class="${blessColorClass(rolled)}">${blessName(rolled)}</span>`; }
         else if (curN === rolN) { let oc = blessColorClass(curB), on = blessName(curB); item.bless = false; msg = `<span class="${oc}">${on}</span> 消失了`; }
         else { let oc = blessColorClass(curB), on = blessName(curB); item.bless = rolled; msg = `<span class="${oc}">${on}</span> 被 <span class="${blessColorClass(rolled)}">${blessName(rolled)}</span> 取代`; }
-    } else if (pick === 1) {
-        let variants = [true, 'eternal', 'immortal', 'primordial'];
-        let rolled = variants[Math.floor(Math.random() * 4)];
-        let curN = (item.anc === true) ? 'ancient' : (item.anc || false);
-        let rolN = (rolled === true) ? 'ancient' : rolled;
-        if (!item.anc) { item.anc = rolled; msg = `附加了 <span class="${ancColorClass(rolled)}">${ancName(rolled)}</span>`; }
-        else if (curN === rolN) { let old = ancName(item.anc), oc = ancColorClass(item.anc); item.anc = false; msg = `<span class="${oc}">${old}</span> 消失了`; }
-        else { let old = ancName(item.anc), oc = ancColorClass(item.anc); item.anc = rolled; msg = `<span class="${oc}">${old}</span> 被 <span class="${ancColorClass(rolled)}">${ancName(rolled)}</span> 取代`; }
     } else {
         let rolled = rollAttrAffix();
         if (!getAttrAffix(item.attr)) { item.attr = rolled; msg = `附加了屬性詞綴`; }
@@ -1214,7 +1206,7 @@ function renderBianBless(el) {
     }).join('');
     el.innerHTML = `
         <div class="flex flex-col gap-2 p-1">
-            <div class="text-slate-300 text-sm leading-relaxed">碧恩：我能為你的裝備灌注力量。每次祝福會在「屬性 / 遠古系 / 祝福」三者中平均抽一個詞綴，隨機<b>附加、取代或消除</b>（只影響該詞綴）。</div>
+            <div class="text-slate-300 text-sm leading-relaxed">碧恩：我能為你的裝備灌注力量。每次祝福會在「屬性 / 祝福」兩者中平均抽一個詞綴，隨機<b>附加、取代或消除</b>（只影響該詞綴）。</div>
             <div class="text-xs text-slate-400">武器用 賦予武器祝福卷軸(持有 ${cnt('new_item_bless_wpn')})；防具用 賦予盔甲祝福卷軸(持有 ${cnt('new_item_bless_arm')})；飾品用 賦予飾品祝福卷軸(持有 ${cnt('new_item_bless_acc')})。含詛咒的裝備可用 解除詛咒的卷軸(持有 ${cnt('new_item_uncurse')}) 移除詛咒。</div>
             ${rows}
         </div>`;

@@ -524,7 +524,7 @@ function doDemonKingCraft(idx) {
     if (lack.length) { logSys(`<span class="text-red-400 font-bold">材料不足，無法製作。</span><span class="text-red-300">（尚缺：${lack.join('、')}）</span>`); return; }
     DEMONKING_MATS.forEach(m => ensureMaterial(m.id, m.cnt, 0));   // 🔧 先自動補製可合成的中間物（黑色米索莉金屬板等），玩家不需先手動製作金屬板
     DEMONKING_MATS.forEach(m => consumeMaterialById(m.id, m.cnt));
-    let inherit = { en: src.en || 0, attr: src.attr || false, bless: src.bless || false, anc: src.anc || false, seteff: src.seteff || false };
+    let inherit = { en: src.en || 0, attr: src.attr || false, bless: src.bless || false, anc: false, seteff: src.seteff || false };   // 🏺 遠古移除：製作不再繼承/產生遠古
     if (src._whSource) { whRemoveStackByUid(src.uid, 1); }   // 🔧 來源武器在倉庫：自倉庫精準消耗該實例
     else if ((src.cnt || 1) > 1) src.cnt -= 1; else player.inv = player.inv.filter(i => i.uid !== src.uid);   // 消耗 1 把來源惡魔武器（背包）
     let inst = { id: r.result, uid: uid(), cnt: 1, en: inherit.en, attr: inherit.attr, bless: inherit.bless, anc: inherit.anc, seteff: inherit.seteff, lock: false };
@@ -587,7 +587,7 @@ function doLumielCraft(idx) {
     if (lack.length) { logSys(`<span class="text-red-400 font-bold">材料不足，無法製作。</span><span class="text-red-300">（尚缺：${lack.join('、')}）</span>`); return; }
     r.mats.forEach(m => ensureMaterial(m.id, m.cnt, 0));   // 🔧 先自動補製可合成的中間物，玩家不需先手動製作
     r.mats.forEach(m => consumeMaterialById(m.id, m.cnt));
-    let inherit = { en: src.en || 0, attr: src.attr || false, bless: src.bless || false, anc: src.anc || false, seteff: src.seteff || false };
+    let inherit = { en: src.en || 0, attr: src.attr || false, bless: src.bless || false, anc: false, seteff: src.seteff || false };   // 🏺 遠古移除：製作不再繼承/產生遠古
     if (src._whSource) { whRemoveStackByUid(src.uid, 1); }   // 來源裝備在倉庫：自倉庫精準消耗
     else if ((src.cnt || 1) > 1) src.cnt -= 1; else player.inv = player.inv.filter(i => i.uid !== src.uid);   // 消耗 1 件來源戰士團裝備（背包）
     let inst = { id: r.result, uid: uid(), cnt: 1, en: inherit.en, attr: inherit.attr, bless: inherit.bless, anc: inherit.anc, seteff: inherit.seteff, lock: false };
