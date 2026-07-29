@@ -1184,7 +1184,8 @@ function startGameTimers() {
 // 補跑（掛機/背景）所得累積：補跑期間 logSys 被靜音，先把所得累積起來，
 // 等真正回到即時（n===1）且累積時間達門檻時，才統一輸出一次，避免每次小補跑都洗版。
 const AWAY_SUMMARY_MIN_MS = 3000;    // 累積補跑時間達 3 秒才輸出「掛機期間獲得」訊息
-let _awayAcc = { ticks: 0, gold: 0, items: {} };
+let _loopLastWall = null;            // 🕒 上次 gameLoop 的牆鐘時間（Date.now）：與 performance.now 平行記，供背景掛機時間戳/落差診斷
+let _awayAcc = { ticks: 0, gold: 0, items: {}, startMs: null, endMs: null, wallMs: 0 };   // 🕒 startMs/endMs=本段背景掛機牆鐘起訖；wallMs=真實流逝總量（與 ticks 換算值相減＝未結算的時間）
 // 🕶️ 「掛機期間獲得」訊息只在分頁確實切到背景時才輸出。gameLoop 的補跑(state.ff)判定純看「距上次 loop 過了多久」，
 //   前景一次長卡頓(saveGame 的 LZ 壓縮／開大量物品面板／GC)也會累積成補跑→原本會誤印掛機訊息。改用 visibilitychange
 //   記「本次累積窗口是否確實隱藏過」(sticky 旗標)：收益照計入 player.gold/inv、只 gate 這行訊息。
@@ -1209,17 +1210,29 @@ function flushAwaySummary() {
             if (_awayAcc.items[id] > 0 && DB.items[id]) gains.push({ id, n: _awayAcc.items[id] });
         }
         if (gains.length) {
-            // 🕒 補上本次背景掛機涵蓋的時間長度（_awayAcc.ticks 為累積拍數·於下方清空前取用）
-            logSys(`掛機期間獲得<span class="text-slate-400">（${_fmtAwayDur(_awayAcc.ticks * TICK_MS)}）</span>：` + gains
+            // 🕒 時間戳＋時長（debug 用）：顯示牆鐘起訖；當「實際流逝」明顯多於「已結算時長」時一併標出落差，
+            //    落差來源＝單次 loop 超過 MAX_CATCHUP_MS(5分)被截斷、或分頁被瀏覽器凍結/降速而漏拍。
+            let _simMs = _awayAcc.ticks * TICK_MS;                       // 遊戲實際結算的時間
+            let _realMs = Math.max(_simMs, _awayAcc.wallMs || _simMs);   // 牆鐘真實流逝
+            let _gapMs = _realMs - _simMs;
+            let _hhmmss = ms => { let d = new Date(ms); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + ':' + ('0' + d.getSeconds()).slice(-2); };
+            let _stamp = (_awayAcc.startMs && _awayAcc.endMs) ? (_hhmmss(_awayAcc.startMs) + '→' + _hhmmss(_awayAcc.endMs) + '·') : '';
+            let _durTxt = (_gapMs >= 5000)
+                ? `結算 ${_fmtAwayDur(_simMs)}／實際 ${_fmtAwayDur(_realMs)} <span class="text-amber-400">⚠落差 ${_fmtAwayDur(_gapMs)}</span>`
+                : _fmtAwayDur(_simMs);
+            logSys(`掛機期間獲得<span class="text-slate-400">（${_stamp}${_durTxt}）</span>：` + gains
                 .map(g => `<span class="${getItemColor({ id: g.id, en: 0 })} font-bold">${DB.items[g.id].n} ×${g.n}</span>`)
                 .join('、'));
+            // 📜 掛機回來顯示結果時：解除兩個日誌的捲動鎖定並回到最新（否則玩家上次往上捲的位置會擋住剛出爐的掛機摘要）
+            try { if (typeof sysLogToBottom === 'function') sysLogToBottom(); } catch (e) {}
+            try { if (typeof combatLogToBottom === 'function') combatLogToBottom(); } catch (e) {}
         }
         if (_awayAcc.gold > 0) {
             /* 🔧 掛機期間獲得的金幣不輸出日誌（已計入 player.gold、即時顯示於左側面板）；賣出/花費/消耗等金幣訊息仍保留 */
         }
     }
     // 無論是否達門檻都清空（未達門檻者視為一般即時遊玩的計時抖動，不輸出）
-    _awayAcc = { ticks: 0, gold: 0, items: {} };
+    _awayAcc = { ticks: 0, gold: 0, items: {}, startMs: null, endMs: null, wallMs: 0 };
     _awaySawHidden = false;
 }
 

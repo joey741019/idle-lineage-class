@@ -147,6 +147,11 @@ function gameLoop() {
     if(_loopLast == null) _loopLast = now;
     let elapsed = now - _loopLast;
     _loopLast = now;
+    // 🕒 牆鐘平行計時（debug 用）：performance.now 在部分瀏覽器背景/睡眠時會停走，且 elapsed 之後會被
+    //    MAX_CATCHUP_MS 截斷 → 兩者相減即可看出「有多少真實時間沒被結算」。供 flushAwaySummary 顯示對照。
+    let _nowWall = Date.now();
+    let _wallElapsed = (_loopLastWall == null) ? 0 : Math.max(0, _nowWall - _loopLastWall);
+    _loopLastWall = _nowWall;
 
     // 遊戲未進行 / 角色死亡：不累積也不補跑（丟棄這段時間）
     if(!state.running || player.dead) { _tickDebt = 0; return; }
@@ -203,6 +208,11 @@ function gameLoop() {
     let _goldGain = player.gold - _goldBefore;
     if (_goldGain > 0) _awayAcc.gold += _goldGain;
     _awayAcc.ticks += n;
+    // 🕒 時間戳（debug）：記本段補跑的牆鐘起訖與真實流逝，供 flushAwaySummary 對照「結算時長 vs 實際經過」，
+    //    差額＝被 MAX_CATCHUP_MS(5分)截斷或分頁凍結而未結算的時間。
+    if (_awayAcc.startMs == null) _awayAcc.startMs = _nowWall - _wallElapsed;
+    _awayAcc.endMs = _nowWall;
+    _awayAcc.wallMs += _wallElapsed;
 
     // 補跑結束，統一刷新畫面（累積所得於下一個即時 tick 開頭由 flushAwaySummary 統一輸出）
     updateUI(); renderMobs(); renderTabs();
