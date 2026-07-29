@@ -1,4 +1,4 @@
-let _audit = { start: Date.now(), gold0: 0, exp: 0, kills: 0, scrollWpn: 0, scrollArm: 0, watch: [], watchCnt: {} };
+let _audit = { start: Date.now(), gold0: 0, exp: 0, expPet: false, kills: 0, scrollWpn: 0, scrollArm: 0, watch: [], watchCnt: {} };   // 🐾 expPet：本段觀測的經驗是否為「寵物池經驗」（玩家滿等時改記·見 auditTrackKill）
 let _auditView = 'stats';   // 'stats' = 本圖效率統計；'drops' = 本圖掉落物品
 const AUDIT_WATCH_KEY = 'lineage_idle_audit_watch';
 function saveAuditWatch() { try { localStorage.setItem(AUDIT_WATCH_KEY, JSON.stringify(_audit.watch)); } catch(e) {} }
@@ -11,7 +11,7 @@ function saveAuditWatch() { try { localStorage.setItem(AUDIT_WATCH_KEY, JSON.str
 function auditReset() {
     _audit.start = Date.now();
     _audit.gold0 = (typeof player !== 'undefined' && player) ? (player.gold || 0) : 0;
-    _audit.exp = 0; _audit.kills = 0; _audit.scrollWpn = 0; _audit.scrollArm = 0;
+    _audit.exp = 0; _audit.expPet = false; _audit.kills = 0; _audit.scrollWpn = 0; _audit.scrollArm = 0;
     _audit.watch.forEach(t => _audit.watchCnt[t] = 0);
     if (typeof _dpsReset === 'function') _dpsReset();   // 🎯 DPS 統計同步歸零（換地圖/重置）
     renderAuditTab();
@@ -19,7 +19,18 @@ function auditReset() {
 function auditTrackKill(mob) {
     if (!mob || typeof getExpGainMult !== 'function') return;
     let g = Math.floor((mob.exp || 0) * getExpGainMult(player.lv));
-    if (g > 0) _audit.exp += g;
+    if (g > 0) { _audit.exp += g; _audit.expPet = false; }
+    // 🐾 玩家滿等(Lv100)後 getExpGainMult=0 → 本欄恆 0、統計失去意義。此時改記「寵物池經驗」：
+    //    ＝ killMob 給寵物的那份總額（js/05 _petExpGain·未經出戰寵平分），前提是有出戰中且未滿等的寵物。
+    //    顯示端會在「累積經驗 / 經驗 / 10分」標題後標示（寵物）以免與玩家經驗混淆。
+    else if ((player.lv || 1) >= 100) {
+        let _outs = [];
+        try { if (typeof petsOutList === 'function') _outs = petsOutList().filter(p => p && !p._downed && (p.lv || 1) < Math.min(100, player.lv || 1)); } catch (e) {}
+        if (_outs.length) {
+            let pg = Math.floor((mob.exp || 0) * (player.classicMode ? 0.5 : 1) * (1 + ((typeof dollFieldVal === 'function' ? dollFieldVal('expBonus') : 0) / 100)));
+            if (pg > 0) { _audit.exp += pg; _audit.expPet = true; }
+        }
+    }
     _audit.kills++;
 }
 function auditTrackGain(res) {
@@ -56,6 +67,7 @@ function renderAuditTab() {
     let gold = (typeof player !== 'undefined' && player) ? ((player.gold || 0) - _audit.gold0) : 0;
     let sf = 10 / (mins || 0.001);
     let exp10 = Math.floor(_audit.exp * sf), gold10 = Math.floor(gold * sf);
+    let _petExpTag = _audit.expPet ? '<span class="text-pink-300">（寵物）</span>' : '';   // 🐾 玩家滿等改記寵物池經驗時的標示
     let watchHtml = _audit.watch.length ? _audit.watch.map((t, i) => {
         let c = _audit.watchCnt[t] || 0;
         return `<div class="flex justify-between items-center bg-slate-800/60 rounded px-2 py-1"><span>🎯 ${t}：<b class="${c>0?'text-green-400':'text-slate-300'}">${c}</b> 個</span><button onclick="auditRemoveIdx(${i})" class="btn px-2 py-0.5 text-xs bg-red-900 border-red-700 text-red-200">移除</button></div>`;
@@ -96,9 +108,9 @@ function renderAuditTab() {
         </div>
         <div class="text-slate-400 text-xs">已觀測 ${mins.toFixed(2)} 分鐘・擊殺 ${_audit.kills.toLocaleString()}（換地圖會自動重置）</div>
         <div class="grid grid-cols-2 gap-2">
-            <div class="bg-slate-800/60 rounded p-2"><div class="text-slate-400 text-xs">累積經驗</div><div class="text-yellow-300 font-bold text-base">${_audit.exp.toLocaleString()}</div></div>
+            <div class="bg-slate-800/60 rounded p-2"><div class="text-slate-400 text-xs">累積經驗${_petExpTag}</div><div class="text-yellow-300 font-bold text-base">${_audit.exp.toLocaleString()}</div></div>
             <div class="bg-slate-800/60 rounded p-2"><div class="text-slate-400 text-xs">純金幣淨增</div><div class="text-yellow-400 font-bold text-base">${gold.toLocaleString()}</div></div>
-            <div class="bg-slate-800/60 rounded p-2"><div class="text-slate-400 text-xs">經驗 / 10分</div><div class="text-amber-300 font-bold text-base">${exp10.toLocaleString()}</div></div>
+            <div class="bg-slate-800/60 rounded p-2"><div class="text-slate-400 text-xs">經驗 / 10分${_petExpTag}</div><div class="text-amber-300 font-bold text-base">${exp10.toLocaleString()}</div></div>
             <div class="bg-slate-800/60 rounded p-2"><div class="text-slate-400 text-xs">金幣 / 10分</div><div class="text-green-300 font-bold text-base">${gold10.toLocaleString()}</div></div>
         </div>
         <div class="border-t border-slate-700 pt-2">
