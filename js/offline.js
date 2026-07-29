@@ -372,6 +372,9 @@
     line += parts.length ? parts.join('、') : '（無明顯收益）';
     line += '。';
     try { logSys(line); } catch (e) { console.log('[AFK]', line.replace(/<[^>]+>/g, '')); }
+    // 📜 離線結算摘要出爐時:解除兩個日誌的捲動鎖定並回到最新(否則上次往上捲的位置會擋住剛出爐的結算結果)
+    try { if (typeof sysLogToBottom === 'function') sysLogToBottom(); } catch (e) {}
+    try { if (typeof combatLogToBottom === 'function') combatLogToBottom(); } catch (e) {}
     // ⚔ 鑰匙房(軍王之室／祭壇):附帶「擊敗輪數 / 消耗鑰匙」;若因鑰匙用完被傳回村,多一行提示。
     //   房型與鑰匙名走核心 kingRoomLabel/kingRoomKeyName 通用文案(祭壇不是軍王之室、鑰匙也各異)。
     var _krLabel = (typeof kingRoomLabel === 'function') ? kingRoomLabel(huntMap) : '軍王之室';
