@@ -1203,6 +1203,13 @@ function _fmtAwayDur(ms) {
     return h + ' 小時' + (min ? ' ' + min + ' 分' : '');
 }
 function flushAwaySummary() {
+    // 🐛 分頁仍在背景 → 只累積、不結算摘要（不輸出/不清空/不動旗標）。
+    //    成因：瀏覽器對背景 setInterval 的節流強度會變動（1s ↔ 60s intensive throttling），gameLoop 因此
+    //    在背景交替走「n>=2 補跑（累積）」與「n===1 即時（呼叫本函式）」兩條路；本函式若在背景就結算，會
+    //    ① 把一整段掛機切成「幾秒～幾十秒」的碎片訊息並清掉累積；② ticks=0 那次還會把 _awaySawHidden 清成
+    //    false → 之後整段掛機完全不輸出訊息（玩家回報「掛 10 分鐘只顯示幾秒／有時完全沒結算」即此二症）。
+    //    收益本來就已即時入袋，這裡只影響摘要訊息；等真正回到前景再一次輸出完整區間。
+    if (typeof document !== 'undefined' && document.hidden) return;
     if (_awayAcc.ticks <= 0) { _awaySawHidden = false; return; }   // 無累積：順手清掉「短暫隱藏但沒補跑」留下的旗標，避免下次前景卡頓被誤判為掛機
     if (_awayAcc.ticks * TICK_MS >= AWAY_SUMMARY_MIN_MS && _awaySawHidden) {   // 🕶️ 加「確實隱藏過」條件：前景卡頓造成的補跑不印訊息（收益仍已入袋）
         let gains = [];
