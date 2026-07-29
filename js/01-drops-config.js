@@ -1192,6 +1192,15 @@ let _awaySawHidden = false;
 if (typeof document !== 'undefined' && document.addEventListener) {
     document.addEventListener('visibilitychange', function () { if (document.hidden) _awaySawHidden = true; });
 }
+// 🕒 背景掛機時長格式化（本訊息最短 3 秒、長可達數小時 → 秒/分/小時三段；比照 js/offline.js 離線結算的「X 小時 Y 分鐘」寫法）
+function _fmtAwayDur(ms) {
+    let s = Math.max(0, Math.round(ms / 1000));
+    if (s < 60) return s + ' 秒';
+    let m = Math.floor(s / 60), sec = s % 60;
+    if (m < 60) return m + ' 分' + (sec ? ' ' + sec + ' 秒' : '');
+    let h = Math.floor(m / 60), min = m % 60;
+    return h + ' 小時' + (min ? ' ' + min + ' 分' : '');
+}
 function flushAwaySummary() {
     if (_awayAcc.ticks <= 0) { _awaySawHidden = false; return; }   // 無累積：順手清掉「短暫隱藏但沒補跑」留下的旗標，避免下次前景卡頓被誤判為掛機
     if (_awayAcc.ticks * TICK_MS >= AWAY_SUMMARY_MIN_MS && _awaySawHidden) {   // 🕶️ 加「確實隱藏過」條件：前景卡頓造成的補跑不印訊息（收益仍已入袋）
@@ -1200,7 +1209,8 @@ function flushAwaySummary() {
             if (_awayAcc.items[id] > 0 && DB.items[id]) gains.push({ id, n: _awayAcc.items[id] });
         }
         if (gains.length) {
-            logSys(`掛機期間獲得：` + gains
+            // 🕒 補上本次背景掛機涵蓋的時間長度（_awayAcc.ticks 為累積拍數·於下方清空前取用）
+            logSys(`掛機期間獲得<span class="text-slate-400">（${_fmtAwayDur(_awayAcc.ticks * TICK_MS)}）</span>：` + gains
                 .map(g => `<span class="${getItemColor({ id: g.id, en: 0 })} font-bold">${DB.items[g.id].n} ×${g.n}</span>`)
                 .join('、'));
         }
